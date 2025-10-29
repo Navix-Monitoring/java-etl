@@ -4,53 +4,61 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 
 public class ParametroDAO {
-    public List<ParametroHardware> buscarParametrosPorModelo(Connection conn, int fkModelo) {
 
-        List<ParametroHardware> listaParametros = new ArrayList<>();
+    public static double cpuMin;
+    public static double cpuNeutro;
+    public static double cpuAtencao;
+    public static double cpuCritico;
+    public static double ramMin, ramNeutro, ramAtencao, ramCritico;
+    public static double discoMin, discoNeutro, discoAtencao, discoCritico;
 
-        String sql = "SELECT " +
-                "h.tipo, ph.unidadeMedida, ph.parametroMinimo, ph.parametroNeutro, " +
-                "ph.parametroAtencao, ph.parametroCritico " +
+
+
+    // --- Busca os parâmetros do banco e armazena nas variáveis ---
+    public void carregarParametrosDoBanco(Connection conn, int fkModelo) {
+        String sql = "SELECT h.tipo, ph.parametroMinimo, ph.parametroNeutro, ph.parametroAtencao, ph.parametroCritico " +
                 "FROM parametroHardware ph " +
-                "JOIN hardware h ON ph.fkHardware = h.id " + // Usando h.id como referência
-                "WHERE ph.fkModelo = ?"; // Usando '?' para PreparedStatement
+                "JOIN hardware h ON ph.fkHardware = h.id " +
+                "WHERE ph.fkModelo = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, fkModelo);
 
             try (ResultSet rs = ps.executeQuery()) {
-
                 while (rs.next()) {
-
-                    // Extração dos dados
-                    String tipoHardware = rs.getString("tipo");
-                    String unidadeMedida = rs.getString("unidadeMedida");
-
-                    // Pegando os 4 parâmetros pra cada um dos tipos de hardware
-                    double minimo = rs.getDouble("parametroMinimo");
+                    String tipo = rs.getString("tipo").toUpperCase();
+                    double min = rs.getDouble("parametroMinimo");
                     double neutro = rs.getDouble("parametroNeutro");
                     double atencao = rs.getDouble("parametroAtencao");
                     double critico = rs.getDouble("parametroCritico");
 
-                    // Criando o objeto para cada um e colocando na lista
-                    ParametroHardware parametro = new ParametroHardware(
-                            tipoHardware, unidadeMedida, minimo, neutro, atencao, critico
-                    );
-                    listaParametros.add(parametro);
+                    switch (tipo) {
+                        case "CPU" -> { cpuMin = min; cpuNeutro = neutro; cpuAtencao = atencao; cpuCritico = critico; }
+                        case "RAM" -> { ramMin = min; ramNeutro = neutro; ramAtencao = atencao; ramCritico = critico; }
+                        case "DISCO" -> { discoMin = min; discoNeutro = neutro; discoAtencao = atencao; discoCritico = critico; }
+                    }
                 }
             }
 
-        } catch (SQLException e) {
-            System.out.println("Erro ao buscar parâmetros do modelo " + fkModelo + ": " + e.getMessage());
-            e.printStackTrace();
-        }
+            System.out.println("Parâmetros do banco carregados com sucesso!");
 
-        return listaParametros;
+        } catch (SQLException e) {
+            System.out.println("Erro ao carregar parâmetros do modelo " + fkModelo + ": " + e.getMessage());
+        }
     }
+
+    public static void mostrarParametros() {
+        System.out.println("=== Parâmetros carregados ===");
+        System.out.printf("CPU    → Min: %.2f, Neutro: %.2f, Atenção: %.2f, Crítico: %.2f%n",
+                cpuMin, cpuNeutro, cpuAtencao, cpuCritico);
+        System.out.printf("RAM    → Min: %.2f, Neutro: %.2f, Atenção: %.2f, Crítico: %.2f%n",
+                ramMin, ramNeutro, ramAtencao, ramCritico);
+        System.out.printf("DISCO  → Min: %.2f, Neutro: %.2f, Atenção: %.2f, Crítico: %.2f%n",
+                discoMin, discoNeutro, discoAtencao, discoCritico);
+    }
+
+
+
 }
