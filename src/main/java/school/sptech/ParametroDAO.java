@@ -7,16 +7,13 @@ import java.sql.SQLException;
 
 public class ParametroDAO {
 
-    public static double cpuMin;
-    public static double cpuNeutro;
-    public static double cpuAtencao;
-    public static double cpuCritico;
+    public static double cpuMin, cpuNeutro, cpuAtencao, cpuCritico;
     public static double ramMin, ramNeutro, ramAtencao, ramCritico;
     public static double discoMin, discoNeutro, discoAtencao, discoCritico;
 
 
 
-    // --- Busca os parâmetros do banco e armazena nas variáveis ---
+    // --- Buscando os parâmetros do banco e armazenando nas variáveis ---
     public void carregarParametrosDoBanco(Connection conn, int fkModelo) {
         String sql = "SELECT h.tipo, ph.parametroMinimo, ph.parametroNeutro, ph.parametroAtencao, ph.parametroCritico " +
                 "FROM parametroHardware ph " +

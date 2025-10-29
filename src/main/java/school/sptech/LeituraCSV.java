@@ -3,21 +3,37 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Random;
 import java.util.Scanner;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class LeituraCSV {
     public static void main(String[] args) {
         String caminhoEntrada = "capturaGui_expandido.csv";
 
+        ParametroDAO dao = new ParametroDAO();
+        Conexao conexao = new Conexao();
+        dao.carregarParametrosDoBanco(conexao.getConexao(), 1);
+
+        dao.mostrarParametros();
+
         try (Scanner sc = new Scanner(new File(caminhoEntrada))) {
             System.out.println("Conteúdo do arquivo de entrada encontrado\n");
 
-            if (sc.hasNextLine()) {
-                sc.nextLine(); // pula o cabeçalho
-                System.out.println("-----------------------------------------------------------------------------------------------------------------------------------");
-                System.out.printf("| %-20s | %-17s | %-5s | %-5s | %-5s | %-5s | %-5s | %-10s | %-5s |\n",
-                        "TIMESTAMP", "MAC", "USER", "CPU", "RAM", "DISCO", "PROC", "BATERIA", "TEMP");
-                System.out.println("-----------------------------------------------------------------------------------------------------------------------------------");
-            }
+            String statusCPU = "";
+            String statusRAM = "";
+            String statusDISCO = "";
+
+            int qtdAlertaMinimo = 0;
+            int qtdAlertaNeutro = 0;
+            int qtdAlertaAtencao = 0;
+            int qtdAlertaCritico = 0;
+
+            String caminhoSaida = "dadosTravados.csv";
+
+            BufferedWriter bw = new BufferedWriter(new FileWriter(caminhoSaida));
+            bw.write("TIMESTAMP,MAC,USER,CPU,RAM,DISCO,PROC,BATERIA,TEMP,statusCPU,statusRAM,statusDISCO");
+            bw.newLine();
 
             while (sc.hasNextLine()) {
                 String linha = sc.nextLine().trim();
@@ -41,7 +57,7 @@ public class LeituraCSV {
                     continue;
                 }
 
-                // Substituir N/A ou vazio em BATERIA
+                // Substituir N/A ou vazio na BATERIA, que é o campo 7
                 if (campos[7].trim().equalsIgnoreCase("N/A") || campos[7].trim().isEmpty()) {
                     campos[7] = "100";
                 }
@@ -56,7 +72,7 @@ public class LeituraCSV {
                     continue;
                 }
 
-                // Temperatura
+                // Temperatura e fazendo o mesmo da bateria
                 if (campos[8].trim().equalsIgnoreCase("N/A") || campos[8].trim().isEmpty()) {
                     double TEMP_BASE_IDLE = 45.0;
                     double FATOR_LINEAR = 0.35;
@@ -72,28 +88,72 @@ public class LeituraCSV {
                     campos[8] = String.valueOf(tempCpu);
                 }
 
+
                 if (cpu >= 0 && cpu <= 100 && ram >= 0 && ram <= 100 && disco >= 0 && disco <= 100) {
-                    System.out.printf("| %-20s | %-17s | %-5s | %-5s | %-5s | %-5s | %-5s | %-10s | %-5s |\n",
-                            campos[0].trim(),
-                            campos[1].trim(),
-                            campos[2].trim(),
-                            campos[3].trim(),
-                            campos[4].trim(),
-                            campos[5].trim(),
-                            campos[6].trim(),
-                            campos[7].trim(),
-                            campos[8].trim()
-                    );
+
+                    if(cpu <= dao.cpuMin) {
+                        statusCPU = "MIN";
+                        qtdAlertaMinimo ++;
+                    } else if(cpu <= dao.cpuNeutro) {
+                        statusCPU = "NEUTRO";
+                        qtdAlertaNeutro++;
+                    } else if(cpu <= dao.cpuAtencao) {
+                        statusCPU = "ATENÇÃO";
+                        qtdAlertaAtencao++;
+                    } else {
+                        statusCPU = "CRÍTICO";
+                        qtdAlertaCritico++;
+                    }
+
+                    if(ram <= dao.ramMin) {
+                        statusRAM = "MIN";
+                        qtdAlertaMinimo ++;
+                    } else if(ram <= dao.ramNeutro) {
+                        statusRAM = "NEUTRO";
+                        qtdAlertaNeutro++;
+                    } else if(ram <= dao.ramAtencao) {
+                        statusRAM = "ATENÇÃO";
+                        qtdAlertaAtencao++;
+                    } else {
+                        statusRAM = "CRÍTICO";
+                        qtdAlertaCritico++;
+                    }
+
+                    if(disco <= dao.discoMin) {
+                        statusDISCO = "MIN";
+                        qtdAlertaMinimo++;
+                    } else if(disco <= dao.discoNeutro) {
+                        statusDISCO = "NEUTRO";
+                        qtdAlertaNeutro++;
+                    } else if(disco <= dao.discoAtencao) {
+                        statusDISCO = "ATENÇÃO";
+                        qtdAlertaAtencao++;
+                    } else {
+                        statusDISCO = "CRÍTICO";
+                        qtdAlertaCritico++;
+                    }
+
+
+                    bw.write(campos[0].trim() + "," + campos[1].trim() + "," + campos[2].trim() + "," +
+                            campos[3].trim() + "," + campos[4].trim() + "," + campos[5].trim() + "," +
+                            campos[6].trim() + "," + campos[7].trim() + "," + campos[8].trim() + "," +
+                            statusCPU + "," + statusRAM + "," + statusDISCO);
+                    bw.newLine();
                 }
             }
-
-            System.out.println("-----------------------------------------------------------------------------------------------------------------------------------");
-
+            bw.close();
+            System.out.println("-------------------------------------------------------------");
+            System.out.println("Quantidade de status mínimos: " +qtdAlertaMinimo);
+            System.out.println("Quantidade de status neutros: " +qtdAlertaNeutro);
+            System.out.println("Quantidade de status em atenção: " +qtdAlertaAtencao);
+            System.out.println("Quantidade de status em crítico: " +qtdAlertaCritico);
         } catch (FileNotFoundException e) {
             System.err.println("Erro: Arquivo de entrada não encontrado no caminho: " + caminhoEntrada);
         } catch (Exception e) {
             System.err.println("Erro inesperado: " + e.getMessage());
-            e.printStackTrace();
         }
+        conexao.fecharConexao();
+
+
     }
 }
