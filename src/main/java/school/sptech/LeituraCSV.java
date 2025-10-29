@@ -1,6 +1,7 @@
 package school.sptech;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Random;
 import java.util.Scanner;
 
 public class LeituraCSV {
@@ -54,9 +55,29 @@ public class LeituraCSV {
                         campos[7] = "100";
                     }
                     //Temperatura
+                    // Trata TEMP se for N/A ou vazio
                     if (campos[8].trim().equalsIgnoreCase("N/A") || campos[8].trim().isEmpty()) {
-                        campos[8] = "100";
+
+                        double TEMP_BASE_IDLE = 45.0;
+                        double FATOR_LINEAR = 0.35;
+                        double FATOR_QUADRATICO = 0.002;
+                        double DESVIO_RUIDO = 1.5;
+
+                        // Gerar ruído normal com média 0 e desvio padrão DESVIO_RUIDO
+                        Random rand = new Random();
+                        double ruido = rand.nextGaussian() * DESVIO_RUIDO; // gaussian = normal(0,1)
+
+                        // Supondo que cpu está em campos[3]
+
+                        double tempCpu = TEMP_BASE_IDLE + (cpu * FATOR_LINEAR) + (cpu * cpu * FATOR_QUADRATICO) + ruido;
+
+                        // Arredonda para 2 casas decimais
+                        tempCpu = Math.round(tempCpu * 100.0) / 100.0;
+
+                        // Atualiza o campo
+                        campos[8] = String.valueOf(tempCpu);
                     }
+
 
                     if (cpu >= 0 && cpu <= 100 && ram >= 0 && ram <= 100 && disco >= 0 && disco <= 100) {
                         System.out.printf("| %-20s | %-17s | %-5s | %-5s | %-5s | %-5s | %-5s | %-10s | %-5s |\n",
