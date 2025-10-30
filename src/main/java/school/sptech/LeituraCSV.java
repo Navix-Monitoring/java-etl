@@ -5,7 +5,6 @@ import java.util.Random;
 import java.util.Scanner;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.IOException;
 
 public class LeituraCSV {
     public static void main(String[] args) {
@@ -14,12 +13,13 @@ public class LeituraCSV {
         ParametroDAO dao = new ParametroDAO();
         Conexao conexao = new Conexao();
         dao.carregarParametrosDoBanco(conexao.getConexao(), 1);
+        System.out.println("-------------------------------------------------------------");
 
         dao.mostrarParametros();
 
         try (Scanner sc = new Scanner(new File(caminhoEntrada))) {
             System.out.println("Conteúdo do arquivo de entrada encontrado\n");
-
+            System.out.println("-------------------------------------------------------------");
             String statusCPU = "";
             String statusRAM = "";
             String statusDISCO = "";
@@ -29,7 +29,7 @@ public class LeituraCSV {
             int qtdAlertaAtencao = 0;
             int qtdAlertaCritico = 0;
 
-            String caminhoSaida = "dadosTravados.csv";
+            String caminhoSaida = "dadosTratados.csv";
 
             BufferedWriter bw = new BufferedWriter(new FileWriter(caminhoSaida));
             bw.write("TIMESTAMP,MAC,USER,CPU,RAM,DISCO,PROC,BATERIA,TEMP,statusCPU,statusRAM,statusDISCO");
@@ -147,6 +147,7 @@ public class LeituraCSV {
             System.out.println("Quantidade de status neutros: " +qtdAlertaNeutro);
             System.out.println("Quantidade de status em atenção: " +qtdAlertaAtencao);
             System.out.println("Quantidade de status em crítico: " +qtdAlertaCritico);
+            System.out.println("-------------------------------------------------------------");
         } catch (FileNotFoundException e) {
             System.err.println("Erro: Arquivo de entrada não encontrado no caminho: " + caminhoEntrada);
         } catch (Exception e) {
