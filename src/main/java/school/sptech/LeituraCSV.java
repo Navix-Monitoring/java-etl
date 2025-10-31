@@ -24,10 +24,10 @@ public class LeituraCSV {
             String statusRAM = "";
             String statusDISCO = "";
 
-            int qtdAlertaMinimo = 0;
-            int qtdAlertaNeutro = 0;
-            int qtdAlertaAtencao = 0;
-            int qtdAlertaCritico = 0;
+            int qtdCpuMinimo = 0, qtdCpuNeutro = 0, qtdCpuAtencao = 0, qtdCpuCritico = 0;
+            int qtdRamMinimo = 0, qtdRamNeutro = 0, qtdRamAtencao = 0, qtdRamCritico = 0;
+            int qtdDiscoMinimo = 0, qtdDiscoNeutro = 0, qtdDiscoAtencao = 0, qtdDiscoCritico = 0;
+
 
             String caminhoSaida = "dadosTratados.csv";
 
@@ -93,44 +93,44 @@ public class LeituraCSV {
 
                     if(cpu <= dao.cpuMin) {
                         statusCPU = "MIN";
-                        qtdAlertaMinimo ++;
+                        qtdCpuMinimo ++;
                     } else if(cpu <= dao.cpuNeutro) {
                         statusCPU = "NEUTRO";
-                        qtdAlertaNeutro++;
+                        qtdCpuNeutro++;
                     } else if(cpu <= dao.cpuAtencao) {
                         statusCPU = "ATENÇÃO";
-                        qtdAlertaAtencao++;
+                        qtdCpuAtencao++;
                     } else {
                         statusCPU = "CRÍTICO";
-                        qtdAlertaCritico++;
+                        qtdCpuCritico++;
                     }
 
                     if(ram <= dao.ramMin) {
                         statusRAM = "MIN";
-                        qtdAlertaMinimo ++;
+                        qtdRamMinimo ++;
                     } else if(ram <= dao.ramNeutro) {
                         statusRAM = "NEUTRO";
-                        qtdAlertaNeutro++;
+                        qtdRamNeutro++;
                     } else if(ram <= dao.ramAtencao) {
                         statusRAM = "ATENÇÃO";
-                        qtdAlertaAtencao++;
+                        qtdRamAtencao++;
                     } else {
                         statusRAM = "CRÍTICO";
-                        qtdAlertaCritico++;
+                        qtdRamCritico++;
                     }
 
                     if(disco <= dao.discoMin) {
                         statusDISCO = "MIN";
-                        qtdAlertaMinimo++;
+                        qtdDiscoMinimo++;
                     } else if(disco <= dao.discoNeutro) {
                         statusDISCO = "NEUTRO";
-                        qtdAlertaNeutro++;
+                        qtdDiscoNeutro++;
                     } else if(disco <= dao.discoAtencao) {
                         statusDISCO = "ATENÇÃO";
-                        qtdAlertaAtencao++;
+                        qtdDiscoAtencao++;
                     } else {
                         statusDISCO = "CRÍTICO";
-                        qtdAlertaCritico++;
+                        qtdDiscoCritico++;
                     }
 
 
@@ -142,19 +142,28 @@ public class LeituraCSV {
                 }
             }
             bw.close();
+            int qtdTotalRam = (qtdRamMinimo + qtdRamAtencao + qtdRamCritico + qtdRamNeutro);
+            int qtdTotalDisco = (qtdDiscoMinimo + qtdDiscoCritico + qtdDiscoNeutro +qtdDiscoAtencao);
+            int qtdTotalCpu = (qtdCpuMinimo + qtdCpuAtencao + qtdCpuNeutro + qtdCpuCritico);
+
+            int qtdTotal = qtdCpuCritico + qtdRamCritico + qtdDiscoCritico;
+
             System.out.println("-------------------------------------------------------------");
-            System.out.println("Quantidade de status mínimos: " +qtdAlertaMinimo);
-            System.out.println("Quantidade de status neutros: " +qtdAlertaNeutro);
-            System.out.println("Quantidade de status em atenção: " +qtdAlertaAtencao);
-            System.out.println("Quantidade de status em crítico: " +qtdAlertaCritico);
+            System.out.println("Quantidade de status mínimos: " + (qtdRamMinimo + qtdCpuMinimo + qtdDiscoMinimo));
+            System.out.println("Quantidade de status neutros: " + (qtdCpuNeutro + qtdDiscoNeutro + qtdRamNeutro));
+            System.out.println("Quantidade de status em atenção: " + (qtdCpuAtencao + qtdDiscoAtencao + qtdRamAtencao));
+            System.out.println("Quantidade de status em crítico: " + (qtdCpuCritico + qtdDiscoCritico + qtdRamCritico));
             System.out.println("-------------------------------------------------------------");
+
+            if((qtdCpuCritico + qtdDiscoCritico + qtdRamCritico) > 30 || (qtdCpuAtencao + qtdRamAtencao + qtdDiscoAtencao) > 30){
+                ConexaoJira.criarIssue(qtdRamCritico, qtdCpuCritico, qtdDiscoCritico,qtdTotal);
+            }
         } catch (FileNotFoundException e) {
             System.err.println("Erro: Arquivo de entrada não encontrado no caminho: " + caminhoEntrada);
         } catch (Exception e) {
             System.err.println("Erro inesperado: " + e.getMessage());
         }
         conexao.fecharConexao();
-
 
     }
 }

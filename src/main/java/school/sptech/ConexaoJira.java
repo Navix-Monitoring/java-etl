@@ -7,12 +7,12 @@ import java.net.http.HttpResponse;
 import java.util.Base64;
 
 public class ConexaoJira {
-    public static String criarIssue() {
+    public static String criarIssue(int qtdAlertaRam,int qtdAlertaCpu,int qtdAlertaDisco, int totalAlertas) {
         try {
             // Váriaveis para usar com a API do JIRA
             String jiraUrl = "URLJIRA";
-            String usuarioEmail = "EMAILADMJIRA";
-            String apiToken = "TOKENJIRA";
+            String usuarioEmail = "EMAILJIRA";
+            String apiToken = "CHAVEDAAPIJIRA";
             String projetoKey = "CHAVEDOPROJETO";
 
             // Autenticação Basic
@@ -20,30 +20,28 @@ public class ConexaoJira {
             String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
 
             // JSON para criar a issue
-            String json = """
-                {
-                  "fields": {
-                    "project": { "key": "%s" },
-                    "summary": "Alerta da ETL: Falha na execução",
-                    "description": {
-                      "type": "doc",
-                      "version": 1,
-                      "content": [
-                        {
-                          "type": "paragraph",
-                          "content": [
-                            {
-                              "type": "text",
-                              "text": "A execução da ETL falhou ao processar o lote de dados das TESTE:00."
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    "issuetype" : {"name" : "Task" } 
-                  }
-                }
-                """.formatted(projetoKey);
+            String json = "{"
+                    + "\"fields\": {"
+                    + "\"project\": {\"key\": \"" + projetoKey + "\"},"
+                    + "\"summary\": \"Relatório de Alertas \","
+                    + "\"description\": {"
+                    + "    \"type\": \"doc\","
+                    + "    \"version\": 1,"
+                    + "    \"content\": [{"
+                    + "        \"type\": \"paragraph\","
+                    + "        \"content\": [{"
+                    + "            \"type\": \"text\","
+                    + "            \"text\": \"Alertas da ETL feitas em um lote:\\nRAM Crítica " + qtdAlertaRam
+                    + "\\nCPU Crítica: " + qtdAlertaCpu
+                    + "\\nDisco Crítica : " + qtdAlertaDisco
+                    + "\\nTotal de Críticos: " + totalAlertas + "\""
+                    + "        }]"
+                    + "    }]"
+                    + "},"
+                    + "\"issuetype\": {\"name\": \"Task\"}"
+                    + "}"
+                    + "}";
+
 
             // Criar conexão HTTP
             HttpClient client = HttpClient.newHttpClient();
