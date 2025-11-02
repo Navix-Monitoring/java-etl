@@ -7,13 +7,14 @@ import java.net.http.HttpResponse;
 import java.util.Base64;
 
 public class ConexaoJira {
-    public static String criarIssue(int qtdAlertaRam,int qtdAlertaCpu,int qtdAlertaDisco, int totalAlertas) {
+    public static String criarIssue(int qtdAlertaRam,int qtdAlertaCpu,int qtdAlertaDisco, int totalAlertas, int qtdAlertaTemp) {
         try {
             // Váriaveis para usar com a API do JIRA
-            String jiraUrl = "URLJIRA";
-            String usuarioEmail = "EMAILJIRA";
-            String apiToken = "CHAVEDAAPIJIRA";
-            String projetoKey = "CHAVEDOPROJETO";
+            String jiraUrl = "URLdoSiteJira";
+            String usuarioEmail = "EmailAdminJira";
+            String apiToken = "TokenDoJira";
+            String projetoKey = "ChaveDoProjeto3Digitos";
+
 
             // Autenticação Basic
             String auth = usuarioEmail + ":" + apiToken;
@@ -34,6 +35,7 @@ public class ConexaoJira {
                     + "            \"text\": \"Alertas da ETL feitas em um lote:\\nRAM Crítica " + qtdAlertaRam
                     + "\\nCPU Crítica: " + qtdAlertaCpu
                     + "\\nDisco Crítica : " + qtdAlertaDisco
+                    + "\\nTemperatura Crítica : " +qtdAlertaTemp
                     + "\\nTotal de Críticos: " + totalAlertas + "\""
                     + "        }]"
                     + "    }]"

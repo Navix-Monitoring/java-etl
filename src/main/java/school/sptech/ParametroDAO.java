@@ -10,12 +10,13 @@ public class ParametroDAO {
     public static double cpuMin, cpuNeutro, cpuAtencao, cpuCritico;
     public static double ramMin, ramNeutro, ramAtencao, ramCritico;
     public static double discoMin, discoNeutro, discoAtencao, discoCritico;
+    public static double tempCpuMin, tempCpuNeutro, tempCpuAtencao,tempCpuCritico;
 
 
 
     // --- Buscando os parâmetros do banco e armazenando nas variáveis ---
     public void carregarParametrosDoBanco(Connection conn, int fkModelo) {
-        String sql = "SELECT h.tipo, ph.parametroMinimo, ph.parametroNeutro, ph.parametroAtencao, ph.parametroCritico " +
+        String sql = "SELECT h.tipo, ph.parametroMinimo, ph.parametroNeutro, ph.parametroAtencao, ph.parametroCritico, ph.unidadeMedida " +
                 "FROM parametroHardware ph " +
                 "JOIN hardware h ON ph.fkHardware = h.id " +
                 "WHERE ph.fkModelo = ?";
@@ -30,9 +31,16 @@ public class ParametroDAO {
                     double neutro = rs.getDouble("parametroNeutro");
                     double atencao = rs.getDouble("parametroAtencao");
                     double critico = rs.getDouble("parametroCritico");
-
+                    String unidadeMedida = rs.getString("unidadeMedida").toUpperCase();
                     switch (tipo) {
-                        case "CPU" -> { cpuMin = min; cpuNeutro = neutro; cpuAtencao = atencao; cpuCritico = critico; }
+                        case "CPU" ->
+                        {
+                            if(unidadeMedida.equals("USO")){
+                                cpuMin = min; cpuNeutro = neutro; cpuAtencao = atencao; cpuCritico = critico;
+                            }else if(unidadeMedida.equals("TEMPERATURA")){
+                                tempCpuMin = min; tempCpuNeutro = neutro; tempCpuAtencao = atencao; tempCpuCritico = critico;
+                            }
+                        }
                         case "RAM" -> { ramMin = min; ramNeutro = neutro; ramAtencao = atencao; ramCritico = critico; }
                         case "DISCO" -> { discoMin = min; discoNeutro = neutro; discoAtencao = atencao; discoCritico = critico; }
                     }
@@ -48,14 +56,15 @@ public class ParametroDAO {
 
     public static void mostrarParametros() {
         System.out.println("=== Parâmetros carregados ===");
-        System.out.printf("CPU    → Min: %.2f, Neutro: %.2f, Atenção: %.2f, Crítico: %.2f%n",
+        System.out.printf("CPU → Min: %.2f, Neutro: %.2f, Atenção: %.2f, Crítico: %.2f%n",
                 cpuMin, cpuNeutro, cpuAtencao, cpuCritico);
+        System.out.printf("TEMPERATURA CPU    → Min: %.2f, Neutro: %.2f, Atenção: %.2f, Crítico: %.2f%n",
+                tempCpuMin, tempCpuNeutro, tempCpuAtencao, tempCpuCritico);
         System.out.printf("RAM    → Min: %.2f, Neutro: %.2f, Atenção: %.2f, Crítico: %.2f%n",
                 ramMin, ramNeutro, ramAtencao, ramCritico);
         System.out.printf("DISCO  → Min: %.2f, Neutro: %.2f, Atenção: %.2f, Crítico: %.2f%n",
                 discoMin, discoNeutro, discoAtencao, discoCritico);
     }
-
 
 
 }
