@@ -5,15 +5,41 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.regions.Region;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Date;
 
 public class LambdaETL {
 
     private final S3Client s3 = S3Client.builder()
             .region(Region.US_EAST_1)
             .build();
-    public void processarArquivo(String bucket, String key) {
+    public void processarArquivo(String bucket, String key, String bucketSaida) {
+
+        String destinatarioFinal = "OUTROS";
+        String pastaMes = String.format("%02d", LocalDate.now().getMonthValue());
+        int numeroSemanaMes = 0;
+
+        int dia = LocalDate.now().getDayOfMonth();
+
+        if (dia <= 7) {
+            numeroSemanaMes = 1;
+        }
+        else if (dia <= 14) {
+            numeroSemanaMes = 2;
+        }
+        else if (dia <= 21) {
+            numeroSemanaMes = 3;
+        }
+        else {
+            numeroSemanaMes = 4;
+        }
+
         try {
             File arquivoLocal = new File("/tmp/" + new File(key).getName());
 
@@ -21,20 +47,39 @@ public class LambdaETL {
                 arquivoLocal.delete();
             }
 
-
             s3.getObject(GetObjectRequest.builder()
                             .bucket(bucket)
                             .key(key)
                             .build(),
                     Paths.get(arquivoLocal.getAbsolutePath()));
 
+            if (key.startsWith("1")) {
+                destinatarioFinal = "1";
+            }
+            else if (key.startsWith("2")) {
+                destinatarioFinal = "2";
+            }
+            else if (key.startsWith("3")) {
+                destinatarioFinal = "3";
+            }
+            else if (key.startsWith("4")) {
+                destinatarioFinal = "4";
+            }
+            else if (key.startsWith("5")) {
+                destinatarioFinal = "5";
+            }
+            else if (key.startsWith("6")) {
+                destinatarioFinal = "6";
+            }
+
+
             String saida = "/tmp/tratado_" + System.currentTimeMillis() + ".csv";
             MainETL.LeituraCSV leitura = new MainETL.LeituraCSV();
             leitura.processar(arquivoLocal.getAbsolutePath(), saida);
 
             s3.putObject(PutObjectRequest.builder()
-                            .bucket(bucket)
-                            .key("tratados/" + arquivoLocal.getName())
+                            .bucket(bucketSaida)
+                            .key("2025/" +destinatarioFinal+ "/" +pastaMes+ "/" + "Semana" +numeroSemanaMes + "/" +  arquivoLocal.getName())
                             .build(),
                     Paths.get(saida));
 
@@ -48,6 +93,7 @@ public class LambdaETL {
         try {
             String bucket = null;
             String key = null;
+            String bucketSaida = "bucket-trusted-navix";
 
             if (event != null && event.containsKey("Records")) {
                 var records = (List<Map<String, Object>>) event.get("Records");
@@ -61,7 +107,7 @@ public class LambdaETL {
             System.out.println("Bucket: " + bucket);
             System.out.println("Arquivo: " + key);
 
-            processarArquivo(bucket, key);
+            processarArquivo(bucket, key, bucketSaida);
             return "Processamento finalizado com sucesso!";
         } catch (Exception e) {
             e.printStackTrace();
