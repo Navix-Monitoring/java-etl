@@ -10,6 +10,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -198,8 +201,15 @@ public class LeituraCSV {
 
     public static String gerarDescricaoJira(List<LoteResumo> resumos) {
         StringBuilder sb = new StringBuilder();
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        sb.append("Relatório gerado em: ").append(LocalDateTime.now().format(dtf)).append("\n\n");
+
+        ZoneId zoneSp = ZoneId.of("America/Sao_Paulo");
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+                .withZone(zoneSp);
+
+        String dataHoraSp = dtf.format(Instant.now());
+
+        sb.append("Relatório gerado em: ").append(dataHoraSp).append("\n\n");
 
         for (LoteResumo r : resumos) {
             sb.append("Lote ").append(r.lote).append(":\n")
@@ -213,6 +223,7 @@ public class LeituraCSV {
                     .append("  - Total Crítico: ").append(r.totalCritico).append("\n")
                     .append("  - Total Avisos: ").append(r.totalAvisos).append("\n\n");
         }
+
         return sb.toString();
     }
 
