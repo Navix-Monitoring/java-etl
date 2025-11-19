@@ -72,14 +72,28 @@ public class LambdaETL {
                 destinatarioFinal = "6";
             }
 
+            Conexao conexao = new Conexao();
+            ModeloDAO modeloDAO = new ModeloDAO();
+
+            ModeloInfo info = modeloDAO.buscarPorLote(conexao.getConexao(), Integer.parseInt(destinatarioFinal));
+            conexao.fecharConexao();
+
+            if (info == null) {
+                throw new RuntimeException("Nenhum modelo encontrado para o lote " + destinatarioFinal);
+            }
+
+// agora você tem:
+            String nomeModelo = info.getNomeModelo();   // exemplo: "Navix2000"
+            int fkModelo = info.getFkModelo();
+
 
             String saida = "/tmp/tratado_" + System.currentTimeMillis() + ".csv";
-            MainETL.LeituraCSV leitura = new MainETL.LeituraCSV();
+            MainETL.LeituraCSV leitura = new MainETL.LeituraCSV(fkModelo);
             leitura.processar(arquivoLocal.getAbsolutePath(), saida);
 
             s3.putObject(PutObjectRequest.builder()
                             .bucket(bucketSaida)
-                            .key("2025/" +destinatarioFinal+ "/" +pastaMes+ "/" + "Semana" +numeroSemanaMes + "/" +  arquivoLocal.getName())
+                            .key("2025/"+nomeModelo+"/IDLote/"+destinatarioFinal+"/Mes/"+pastaMes+"/"+"Semana"+numeroSemanaMes+"/"+arquivoLocal.getName())
                             .build(),
                     Paths.get(saida));
 
