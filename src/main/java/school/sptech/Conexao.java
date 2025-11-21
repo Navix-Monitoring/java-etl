@@ -19,11 +19,12 @@ public class Conexao {
             Ec2Client ec2 = Ec2Client.builder()
                     .region(Region.US_EAST_1)
                     .build();
+            String nomeInstancia = System.getenv("NOME_INSTANCIA");
 
             DescribeInstancesRequest request = DescribeInstancesRequest.builder()
                     .filters(Filter.builder()
                             .name("tag:Name")
-                            .values("NOME_INSTANCIA")
+                            .values(nomeInstancia)
                             .build())
                     .build();
 
@@ -36,11 +37,11 @@ public class Conexao {
                 }
             }
 
-            if (ipPublico == null) throw new RuntimeException("Nenhum IP encontrado para " + "NOME_INSTANCIA");
+            if (ipPublico == null) throw new RuntimeException("Nenhum IP encontrado para " + nomeInstancia);
 
             String url = "jdbc:mysql://" + ipPublico + ":3306/navix";
-            String user = "USER";
-            String pass = "SENHA";
+            String user = System.getenv("USER");
+            String pass = System.getenv("SENHA");
 
             conexao = DriverManager.getConnection(url, user, pass);
             System.out.println("Conexão estabelecida com " + ipPublico);
