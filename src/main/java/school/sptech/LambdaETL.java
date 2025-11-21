@@ -30,10 +30,10 @@ public class LambdaETL {
         if (dia <= 7) {
             numeroSemanaMes = 1;
         }
-        else if (dia <= 14) {
+        else if (dia <= 15) {
             numeroSemanaMes = 2;
         }
-        else if (dia <= 21) {
+        else if (dia <= 22) {
             numeroSemanaMes = 3;
         }
         else {
