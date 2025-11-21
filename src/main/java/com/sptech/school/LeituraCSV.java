@@ -53,7 +53,7 @@ public class LeituraCSV {
             for (int i = 1; i <= 6; i++) {
 
                 String keyEntrada =
-                        ano + "/" + i + "/" + mesAtual + "/Semana" + numeroSemana + "/" +
+                        ano +"/NAV-M100/IDLote/"+ i+"/Mes/"+ mesAtual + "/Semana" + numeroSemana + "/" +
                                 i + "-" + diaAtual + "-" + mesAtual + "-" + ano + ".csv";
 
                 String localEntrada = "/tmp/input-" + i + ".csv";
