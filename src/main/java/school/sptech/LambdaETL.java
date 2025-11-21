@@ -107,7 +107,7 @@ public class LambdaETL {
         try {
             String bucket = null;
             String key = null;
-            String bucketSaida = "bucket-trusted-navix";
+            String bucketSaida = "NOME_BUCKET_SAIDA";
 
             if (event != null && event.containsKey("Records")) {
                 var records = (List<Map<String, Object>>) event.get("Records");

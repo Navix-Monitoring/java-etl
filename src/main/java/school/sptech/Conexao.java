@@ -23,7 +23,7 @@ public class Conexao {
             DescribeInstancesRequest request = DescribeInstancesRequest.builder()
                     .filters(Filter.builder()
                             .name("tag:Name")
-                            .values("servidorNavix")
+                            .values("NOME_INSTANCIA")
                             .build())
                     .build();
 
@@ -36,11 +36,11 @@ public class Conexao {
                 }
             }
 
-            if (ipPublico == null) throw new RuntimeException("Nenhum IP encontrado para 'servidorNavix'");
+            if (ipPublico == null) throw new RuntimeException("Nenhum IP encontrado para " + "NOME_INSTANCIA");
 
             String url = "jdbc:mysql://" + ipPublico + ":3306/navix";
-            String user = "navix";
-            String pass = "SPTech@2025";
+            String user = "USER";
+            String pass = "SENHA";
 
             conexao = DriverManager.getConnection(url, user, pass);
             System.out.println("Conexão estabelecida com " + ipPublico);
