@@ -7,6 +7,7 @@ import software.amazon.awssdk.regions.Region;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.List;
@@ -25,7 +26,9 @@ public class LambdaETL {
         String pastaMes = String.format("%02d", LocalDate.now().getMonthValue());
         int numeroSemanaMes = 0;
 
-        int dia = LocalDate.now().getDayOfMonth();
+        ZoneId horarioSP = ZoneId.of("America/Sao_Paulo");
+
+        int dia = LocalDate.now(horarioSP).getDayOfMonth();
 
         if (dia <= 7) {
             numeroSemanaMes = 1;
