@@ -3,17 +3,19 @@ package com.sptech.school;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -25,15 +27,20 @@ public class LeituraCSV {
             .region(Region.US_EAST_1)
             .build();
 
-    public List<LoteResumo> processar(){
+    public final ObjectMapper mapper = new ObjectMapper();
+
+    public List<LoteResumo> processar() throws IOException {
         List<LoteResumo> resumos = new ArrayList<>();
 
         String nomeBucket = "bucket-trusted-navix";
-        String bucketSaida = "bucket-client-navix";
+        String bucketSaida = "bucket-client-gnavix";
 
         int ano = 2025;
-        int diaAtual = LocalDate.now().getDayOfMonth();
-        int mesAtual = LocalDate.now().getMonthValue();
+
+        ZoneId horarioSP = ZoneId.of("America/Sao_Paulo");
+
+        int diaAtual = LocalDate.now(horarioSP).getDayOfMonth();
+        int mesAtual = LocalDate.now(horarioSP).getMonthValue();
 
         int numeroSemana =
                 diaAtual <= 7 ? 1 :
@@ -42,14 +49,6 @@ public class LeituraCSV {
 
         int lote = 1;
 
-        String localSaida = "/tmp/Relatorio-Final.csv";
-
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(localSaida))) {
-
-            bw.write(
-                    "LOTE,CPU_CRITICO,RAM_CRITICO,DISCO_CRITICO,TEMP_CRITICO," +
-                            "TOTAL_BAIXO,TOTAL_NEUTRO,TOTAL_ALERTA,TOTAL_CRITICO,TOTAL_AVISOS\n"
-            );
             for (int i = 1; i <= 6; i++) {
 
                 String keyEntrada =
@@ -77,14 +76,6 @@ public class LeituraCSV {
                 int qtdTempBaixo = 0, qtdTempNeutro = 0, qtdTempAlerta = 0, qtdTempCritico = 0;
 
                 if (!arquivoExiste) {
-
-                    bw.write(String.join(",",
-                            String.valueOf(lote),
-                            "0","0","0","0",
-                            "0","0","0","0",
-                            "0"
-                    ));
-                    bw.newLine();
 
                     LoteResumo r = new LoteResumo();
                     r.lote = lote;
@@ -154,48 +145,36 @@ public class LeituraCSV {
                     r.totalAvisos = totalAvisos;
                     resumos.add(r);
 
-                    //Escrever o csv pro Trusted
-                    bw.write(String.join(",",
-                            String.valueOf(lote),
-                            String.valueOf(qtdCpuCritico),
-                            String.valueOf(qtdRamCritico),
-                            String.valueOf(qtdDiscoCritico),
-                            String.valueOf(qtdTempCritico),
-                            String.valueOf(totalBaixo),
-                            String.valueOf(totalNeutro),
-                            String.valueOf(totalAlerta),
-                            String.valueOf(totalCritico),
-                            String.valueOf(totalAvisos)
-                    ));
-                    bw.newLine();
-
                 }
-
-
                 lote++;
                 File fIn = new File(localEntrada);
                 if (fIn.exists()) fIn.delete();
             }
 
-        } catch (Exception e) {
-            System.out.println("ERRO GERAL: " + e.getMessage());
-        }
 
+
+
+        String localJson = "/tmp/relatorio.json";
+
+        String json = mapper.writeValueAsString(resumos);
+
+        Files.writeString(Paths.get(localJson),json);
 
         String keySaida =
                 ano + "/" + mesAtual + "/Semana" + numeroSemana +
-                        "/Relatorio-Final-" + diaAtual + "-" + mesAtual + "-" + ano + ".csv";
+                        "/Relatorio-Final-" + diaAtual + "-" + mesAtual + "-" + ano + ".json";
 
         s3.putObject(
                 PutObjectRequest.builder()
                         .bucket(bucketSaida)
                         .key(keySaida)
                         .build(),
-                Paths.get(localSaida)
+                Paths.get(localJson)
 
         );
-        File fOut = new File(localSaida);
-        if (fOut.exists()) fOut.delete();
+
+        File fJson = new File(localJson);
+        if(fJson.exists()) fJson.delete();
         return resumos;
     }
 
