@@ -1,0 +1,7 @@
+[{"lote":1,"cpuCritico":0,"ramCritico":19,"discoCritico":0,"tempCritico":0,"totalBaixo":30,"totalNeutro":27,"totalAlerta":0,"totalCritico":19,"totalAvisos":76},
+{"lote":2,"cpuCritico":0,"ramCritico":18,"discoCritico":0,"tempCritico":0,"totalBaixo":18,"totalNeutro":32,"totalAlerta":4,"totalCritico":18,"totalAvisos":72},
+{"lote":3,"cpuCritico":0,"ramCritico":36,"discoCritico":0,"tempCritico":0,"totalBaixo":38,"totalNeutro":69,"totalAlerta":1,"totalCritico":36,"totalAvisos":144},
+{"lote":4,"cpuCritico":0,"ramCritico":0,"discoCritico":19,"tempCritico":0,"totalBaixo":11,"totalNeutro":27,"totalAlerta":19,"totalCritico":19,"totalAvisos":76},
+{"lote":5,"cpuCritico":0,"ramCritico":0,"discoCritico":18,"tempCritico":0,"totalBaixo":0,"totalNeutro":36,"totalAlerta":18,"totalCritico":18,"totalAvisos":72},
+{"lote":6,"cpuCritico":0,"ramCritico":0,"discoCritico":18,"tempCritico":0,"totalBaixo":0,"totalNeutro":36,"totalAlerta":18,"totalCritico":18,"totalAvisos":72}]
+
