@@ -25,7 +25,7 @@ public class MainETL {
             try (Scanner sc = new Scanner(new File(caminhoEntrada));
                  BufferedWriter bw = new BufferedWriter(new FileWriter(caminhoSaida))) {
 
-                bw.write("TIMESTAMP,MAC,CPU,RAM,DISCO,PROC,BATERIA,TEMP,TEMPBATERIA,statusCPU,statusRAM,statusDISCO,statusTEMP\n");
+                bw.write("TIMESTAMP,MAC,CPU,RAM,DISCO,PROC,BATERIA,TEMP,TEMPBATERIA,velocidadeEstimada,consumoEnergia,statusCPU,statusRAM,statusDISCO,statusTEMP\n");
 
                 while (sc.hasNextLine()) {
                     String linha = sc.nextLine().trim();
@@ -101,6 +101,8 @@ public class MainETL {
                             campos[6], // bateria
                             campos[7], // temp_cpu
                             campos[8], // temp_bateria
+                            campos[9], //Velocidade
+                            campos[10],//consumo-energia
                             statusCPU, statusRAM, statusDISCO, statusTEMP
                     ));
                     bw.newLine();

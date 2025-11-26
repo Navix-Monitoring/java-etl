@@ -33,10 +33,10 @@ public class LambdaETL {
         if (dia <= 7) {
             numeroSemanaMes = 1;
         }
-        else if (dia <= 15) {
+        else if (dia <= 14) {
             numeroSemanaMes = 2;
         }
-        else if (dia <= 22) {
+        else if (dia <= 21) {
             numeroSemanaMes = 3;
         }
         else {
@@ -55,6 +55,11 @@ public class LambdaETL {
                             .key(key)
                             .build(),
                     Paths.get(arquivoLocal.getAbsolutePath()));
+
+            if (key.toLowerCase().contains("processos")) {
+                System.out.println("Ignorando completamente: arquivo contém 'processos':" + key);
+                return;
+            }
 
             if (key.startsWith("1")) {
                 destinatarioFinal = "1";
@@ -85,8 +90,9 @@ public class LambdaETL {
                 throw new RuntimeException("Nenhum modelo encontrado para o lote " + destinatarioFinal);
             }
 
-// agora você tem:
-            String nomeModelo = info.getNomeModelo();   // exemplo: "Navix2000"
+
+            String nomeModelo = info.getNomeModelo();
+            String nomeEmpresa = info.getEmpresaNome();
             int fkModelo = info.getFkModelo();
 
 
@@ -96,7 +102,7 @@ public class LambdaETL {
 
             s3.putObject(PutObjectRequest.builder()
                             .bucket(bucketSaida)
-                            .key("2025/"+nomeModelo+"/IDLote/"+destinatarioFinal+"/Mes/"+pastaMes+"/"+"Semana"+numeroSemanaMes+"/"+arquivoLocal.getName())
+                            .key("2025/"+nomeEmpresa+"/"+nomeModelo+"/IDVeiculo/"+destinatarioFinal+"/Mes/"+pastaMes+"/Semana"+numeroSemanaMes+"/"+arquivoLocal.getName())
                             .build(),
                     Paths.get(saida));
 

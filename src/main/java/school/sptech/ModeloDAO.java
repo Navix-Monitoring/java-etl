@@ -10,14 +10,17 @@ public class ModeloDAO {
     public ModeloInfo buscarPorLote(Connection conn, int fkLote) {
 
         String sql = """
-            SELECT 
-                veiculo.fkLote,
-                modelo.id AS idModelo,
-                modelo.nome AS nomeModelo
-            FROM veiculo
-            JOIN modelo ON modelo.id = veiculo.fkModelo
-            WHERE veiculo.fkLote = ?
-            LIMIT 1;
+            SELECT
+                        v.fkLote,
+                        m.id AS idModelo,
+                        m.nome AS nomeModelo,
+                        e.razaoSocial AS empresaNome
+                    FROM veiculo v
+                    JOIN modelo m ON m.id = v.fkModelo
+                    JOIN lote l ON l.id = v.fkLote
+                    JOIN empresa e ON e.id = l.fkEmpresa
+                    WHERE v.fkLote = ?
+                    LIMIT 1;
         """;
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -29,6 +32,7 @@ public class ModeloDAO {
                     info.setFkLote(rs.getInt("fkLote"));
                     info.setFkModelo(rs.getInt("idModelo"));
                     info.setNomeModelo(rs.getString("nomeModelo"));
+                    info.setEmpresaNome(rs.getString("empresaNome"));
                     return info;
                 }
             }

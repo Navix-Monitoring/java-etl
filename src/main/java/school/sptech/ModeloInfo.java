@@ -4,6 +4,8 @@ public class ModeloInfo {
     private int fkModelo;
     private int fkLote;
     private String nomeModelo;
+    private String empresaNome;
+
 
     public int getFkModelo() {
         return fkModelo;
@@ -27,5 +29,13 @@ public class ModeloInfo {
 
     public void setNomeModelo(String nomeModelo) {
         this.nomeModelo = nomeModelo;
+    }
+
+    public String getEmpresaNome() {
+        return empresaNome;
+    }
+
+    public void setEmpresaNome(String empresaNome) {
+        this.empresaNome = empresaNome;
     }
 }
