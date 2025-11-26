@@ -33,7 +33,7 @@ public class LeituraCSV {
         List<LoteResumo> resumos = new ArrayList<>();
 
         String nomeBucket = "bucket-trusted-navix";
-        String bucketSaida = "bucket-client-gnavix";
+        String bucketSaida = "bucket-client-navix";
 
         int ano = 2025;
 
@@ -52,7 +52,7 @@ public class LeituraCSV {
             for (int i = 1; i <= 6; i++) {
 
                 String keyEntrada =
-                        ano +"/NAV-M100/IDLote/"+ i+"/Mes/"+ mesAtual + "/Semana" + numeroSemana + "/" +
+                        ano +"/Tech Solutions LTDA/NAV-M100/IDVeiculo/"+ i+"/Mes/"+ mesAtual + "/Semana" + numeroSemana + "/" +
                                 i + "-" + diaAtual + "-" + mesAtual + "-" + ano + ".csv";
 
                 String localEntrada = "/tmp/input-" + i + ".csv";
@@ -161,7 +161,7 @@ public class LeituraCSV {
         Files.writeString(Paths.get(localJson),json);
 
         String keySaida =
-                ano + "/" + mesAtual + "/Semana" + numeroSemana +
+                "dashAlertas/"+ano+"/" + mesAtual + "/Semana" + numeroSemana +
                         "/Relatorio-Final-" + diaAtual + "-" + mesAtual + "-" + ano + ".json";
 
         s3.putObject(
