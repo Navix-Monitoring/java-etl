@@ -1,4 +1,4 @@
-package sptech.school;
+package school.sptech;
 
 // logica mediana
 

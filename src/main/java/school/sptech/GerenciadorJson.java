@@ -1,4 +1,4 @@
-package sptech.school;
+package school.sptech;
 
 // utiliza StringBuilder para inserir novos dias ou novos lotes no arquivo
 
@@ -8,7 +8,7 @@ public class GerenciadorJson {
         return String.format(
                 "{\"diaSemana\": \"%s\", \"cpu\": %.1f, \"ram\": %.1f, \"disco\": %.1f, \"processos\": %.1f, \"temperatura\": %.1f}",
                 diaSemana, cpu, ram, disco, procs, temp
-        ).replace(",", ".");
+        );
     }
 
     public String adicionarLoteAoGeral(String jsonGeral, int idLote, String novoDiaJson) {

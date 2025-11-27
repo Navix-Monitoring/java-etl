@@ -1,4 +1,4 @@
-package sptech.school;
+package school.sptech;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;

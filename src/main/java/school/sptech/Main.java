@@ -1,4 +1,4 @@
-package sptech.school;
+package school.sptech;
 
 
 // responsavel por varrer os 6 lotes no bucket Trusted
