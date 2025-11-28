@@ -6,12 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="ETL" />
-        <module name="etl-jira-lambda" />
+        <module name="etlPrevisao" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="ETLJava" target="21" />
-    </bytecodeTargetLevel>
   </component>
 </project>
