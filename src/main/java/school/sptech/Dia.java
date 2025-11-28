@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Dia {
 
-    private int numeroDia; // 22, 23, 24...
+    private int numeroDia;
     private List<DiasSemana> lotes;
 
     public Dia(int numeroDia) {
@@ -13,13 +13,8 @@ public class Dia {
         this.lotes = new ArrayList<>();
     }
 
-    public int getNumeroDia() {
-        return numeroDia;
-    }
-
-    public List<DiasSemana> getLotes() {
-        return lotes;
-    }
+    public int getNumeroDia() { return numeroDia; }
+    public List<DiasSemana> getLotes() { return lotes; }
 
     @Override
     public String toString() {
