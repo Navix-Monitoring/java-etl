@@ -14,12 +14,8 @@ public class LambdaHandler implements RequestHandler<Object, String> {
 
             List<LoteResumo> resumos = leitura.processar();
 
-            String descricao = LeituraCSV.gerarDescricaoJira(resumos);
 
-            ConexaoJira jira = new ConexaoJira();
-            String resposta = jira.criarIssue(descricao);
-
-            return "Processamento concluído. Jira respondeu: " + resposta;
+            return "Processamento concluído.";
 
         } catch (Exception e) {
             return "Erro no processamento: " + e.getMessage();

@@ -44,8 +44,8 @@ public class LeituraCSV {
 
         int numeroSemana =
                 diaAtual <= 7 ? 1 :
-                        diaAtual <= 15 ? 2 :
-                                diaAtual <= 22 ? 3 : 4;
+                        diaAtual <= 14 ? 2 :
+                                diaAtual <= 21 ? 3 : 4;
 
         int lote = 1;
 
@@ -135,11 +135,13 @@ public class LeituraCSV {
                     LoteResumo r = new LoteResumo();
                     r.lote = lote;
                     r.cpuCritico = qtdCpuCritico;
+                    r.cpuAtencao = qtdCpuAtencao
                     r.ramCritico = qtdRamCritico;
+                    r.ramAtencao = qtdRamAtencao
                     r.discoCritico = qtdDiscoCritico;
+                    r.discoAtencao = qtdDiscoAtencao
                     r.tempCritico = qtdTempCritico;
-                    r.totalBaixo = totalBaixo;
-                    r.totalNeutro = totalNeutro;
+                    r.tempAtencao = qtdTempAtencao
                     r.totalAlerta = totalAlerta;
                     r.totalCritico = totalCritico;
                     r.totalAvisos = totalAvisos;
@@ -161,7 +163,7 @@ public class LeituraCSV {
         Files.writeString(Paths.get(localJson),json);
 
         String keySaida =
-                "dashAlertas/"+ano+"/" + mesAtual + "/Semana" + numeroSemana +
+                "dashSaude/"+ano+"/" + mesAtual + "/Semana" + numeroSemana +
                         "/Relatorio-Final-" + diaAtual + "-" + mesAtual + "-" + ano + ".json";
 
         s3.putObject(
@@ -176,34 +178,6 @@ public class LeituraCSV {
         File fJson = new File(localJson);
         if(fJson.exists()) fJson.delete();
         return resumos;
-    }
-
-    public static String gerarDescricaoJira(List<LoteResumo> resumos) {
-        StringBuilder sb = new StringBuilder();
-
-        ZoneId zoneSp = ZoneId.of("America/Sao_Paulo");
-
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
-                .withZone(zoneSp);
-
-        String dataHoraSp = dtf.format(Instant.now());
-
-        sb.append("Relatório gerado em: ").append(dataHoraSp).append("\n\n");
-
-        for (LoteResumo r : resumos) {
-            sb.append("Lote ").append(r.lote).append(":\n")
-                    .append("  - CPU Crítico: ").append(r.cpuCritico).append("\n")
-                    .append("  - RAM Crítico: ").append(r.ramCritico).append("\n")
-                    .append("  - DISCO Crítico: ").append(r.discoCritico).append("\n")
-                    .append("  - TEMP Crítico: ").append(r.tempCritico).append("\n")
-                    .append("  - Total Baixo: ").append(r.totalBaixo).append("\n")
-                    .append("  - Total Neutro: ").append(r.totalNeutro).append("\n")
-                    .append("  - Total Alerta: ").append(r.totalAlerta).append("\n")
-                    .append("  - Total Crítico: ").append(r.totalCritico).append("\n")
-                    .append("  - Total Avisos: ").append(r.totalAvisos).append("\n\n");
-        }
-
-        return sb.toString();
     }
 
 }
