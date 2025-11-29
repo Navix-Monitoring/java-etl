@@ -37,10 +37,9 @@ public class Main implements RequestHandler<S3Event, String> {
 
         String bucketOrigem = "bucket-trusted-navix";
         String bucketDestino = "bucket-client-navix";
-        String pastaFinal = "dashMediana/2025/";
-        String chaveDestinoFinal = "RelatorioGeral.json";
+        String caminhoCompleto = "dashMediana/2025/RelatorioGeral.json";
 
-        String jsonGeral = buscarJsonGeral(bucketDestino, chaveDestinoFinal);
+        String jsonGeral = buscarJsonGeral(bucketDestino, caminhoCompleto);
 
         int ano = 2025;
         int diaAtual = LocalDate.now().getDayOfMonth();
@@ -93,7 +92,7 @@ public class Main implements RequestHandler<S3Event, String> {
         try {
             s3Client.putObject(PutObjectRequest.builder()
                             .bucket(bucketDestino)
-                            .key(pastaFinal+chaveDestinoFinal)
+                            .key(caminhoCompleto)
                             .contentType("application/json")
                             .build(),
                     RequestBody.fromString(jsonGeral, StandardCharsets.UTF_8));

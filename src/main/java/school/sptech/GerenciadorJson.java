@@ -1,6 +1,7 @@
 package school.sptech;
 
-// utiliza StringBuilder para inserir novos dias ou novos lotes no arquivo
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GerenciadorJson {
 
@@ -16,37 +17,78 @@ public class GerenciadorJson {
             jsonGeral = "[]";
         }
 
-        StringBuilder sb = new StringBuilder(jsonGeral.trim());
+        String diaSemana = extrairDiaDoJson(novoDiaJson);
 
         String buscaLote = "\"lote\": " + idLote;
-
-        int posicaoLote = sb.indexOf(buscaLote);
+        int posicaoLote = jsonGeral.indexOf(buscaLote);
 
         if (posicaoLote != -1) {
-            int posicaoLista = sb.indexOf("\"dias\": [", posicaoLote);
+            // Acha onde começa a lista de dias do lote
+            int inicioListaDias = jsonGeral.indexOf("\"dias\": [", posicaoLote);
 
-            int ondeInserir = posicaoLista + "\"dias\": [".length();
-            char proximoCaractere = sb.charAt(ondeInserir);
+            // Acha onde termina a lista de dias
+            int fimListaDias = encontrarFechamentoColchete(jsonGeral, inicioListaDias + 8);
 
-            if (proximoCaractere == ']') {
-                sb.insert(ondeInserir, novoDiaJson);
+            String conteudoDias = jsonGeral.substring(inicioListaDias, fimListaDias + 1);
+
+            if (conteudoDias.contains("\"diaSemana\": \"" + diaSemana + "\"")) {
+                String regex = "\\{\\s*\"diaSemana\":\\s*\"" + diaSemana + "\"[^}]*\\}";
+
+                String conteudoDiasAtualizado = conteudoDias.replaceAll(regex, novoDiaJson);
+
+                return jsonGeral.substring(0, inicioListaDias) +
+                        conteudoDiasAtualizado +
+                        jsonGeral.substring(fimListaDias + 1);
+
             } else {
-                sb.insert(ondeInserir, novoDiaJson + ",");
+                StringBuilder sb = new StringBuilder(jsonGeral);
+                int ondeInserir = inicioListaDias + "\"dias\": [".length();
+
+                char proximoCaractere = sb.charAt(ondeInserir);
+
+                if (proximoCaractere == ']') {
+                    sb.insert(ondeInserir, novoDiaJson);
+                } else {
+                    sb.insert(ondeInserir, novoDiaJson + ",");
+                }
+                return sb.toString();
             }
 
         }
         else {
             String novoLoteCompleto = String.format("{\"lote\": %d, \"dias\": [%s]}", idLote, novoDiaJson);
 
-            if (sb.toString().equals("[]")) {
+            if (jsonGeral.trim().equals("[]")) {
                 return "[" + novoLoteCompleto + "]";
             } else {
+                StringBuilder sb = new StringBuilder(jsonGeral);
                 int ultimoColchete = sb.lastIndexOf("]");
-
                 sb.insert(ultimoColchete, "," + novoLoteCompleto);
+                return sb.toString();
             }
         }
+    }
 
-        return sb.toString();
+
+    private String extrairDiaDoJson(String json) {
+        // Usa Regex para pegar o valor de "diaSemana"
+        Pattern pattern = Pattern.compile("\"diaSemana\":\\s*\"([^\"]+)\"");
+        Matcher matcher = pattern.matcher(json);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return "";
+    }
+
+    private int encontrarFechamentoColchete(String texto, int inicio) {
+        int contador = 1;
+        for (int i = inicio + 1; i < texto.length(); i++) {
+            char c = texto.charAt(i);
+            if (c == '[') contador++;
+            if (c == ']') contador--;
+
+            if (contador == 0) return i;
+        }
+        return -1; 
     }
 }
