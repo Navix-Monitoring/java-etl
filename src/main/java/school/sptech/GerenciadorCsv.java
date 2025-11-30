@@ -41,7 +41,6 @@ public class GerenciadorCsv {
             while (scanner.hasNextLine()) {
                 String linha = scanner.nextLine();
 
-                // 1. CORREÇÃO NO FILTRO DE CABEÇALHO
                 // Verifica se a linha começa exatamente com "TIMESTAMP,MAC,CPU..."
                 if (linha.trim().isEmpty() || linha.toUpperCase().startsWith("TIMESTAMP,")) {
                     continue;
@@ -49,8 +48,7 @@ public class GerenciadorCsv {
 
                 String[] colunas = linha.split(",");
 
-                // 2. CORREÇÃO NO MÍNIMO DE COLUNAS
-                // Precisamos de pelo menos 8 colunas para pegar a temperatura (índice 7)
+                // Precisa de pelo menos 8 colunas para pegar a temperatura (índice 7)
                 if (colunas.length < 8) {
                     System.out.println("Linha ignorada: Número insuficiente de colunas.");
                     continue;
