@@ -46,8 +46,8 @@ public class Main implements RequestHandler<S3Event, String> {
         int mesAtual = LocalDate.now().getMonthValue();
 
         int numeroSemana = diaAtual <= 7 ? 1 :
-                diaAtual <= 15 ? 2 :
-                        diaAtual <= 22 ? 3 : 4;
+                diaAtual <= 14 ? 2 :
+                        diaAtual <= 21 ? 3 : 4;
 
         System.out.println("Iniciando processamento dos 6 lotes...");
 
