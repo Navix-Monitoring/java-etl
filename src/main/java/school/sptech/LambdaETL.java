@@ -20,7 +20,7 @@ public class LambdaETL  {
         ZoneId horarioSP = ZoneId.of("America/Sao_Paulo");
 
         String destinatarioFinal = "OUTROS";
-        String ano = String.format("%02d",LocalDate.now().getMonthValue());
+        String ano = String.format("%02d",LocalDate.now().getYear());
         String mes = String.format("%02d", LocalDate.now().getMonthValue());
         int dia = LocalDate.now(horarioSP).getDayOfMonth();
         int numeroSemanaMes = 0;
@@ -64,7 +64,7 @@ public class LambdaETL  {
 
             s3.putObject(PutObjectRequest.builder()
                             .bucket(bucketSaida)
-                            .key("dashLatencia/ano/2025/"+nomeModelo+"/IDLote/"+destinatarioFinal+"/Mes/"+mes+"/"+"Semana"+numeroSemanaMes+"/Dia/"+dia+"/"+arquivoLocal.getName())
+                            .key("dashProcessos/ano/"+ano+/"+nomeModelo+"/IDLote/"+destinatarioFinal+"/Mes/"+mes+"/"+"Semana"+numeroSemanaMes+"/Dia/"+dia+"/"+arquivoLocal.getName())
                             .build(),
                     Paths.get(saida));
             System.out.println("Arquivo processado e salvo com sucesso!");
