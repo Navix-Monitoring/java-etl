@@ -64,7 +64,7 @@ public class LambdaETL  {
 
             s3.putObject(PutObjectRequest.builder()
                             .bucket(bucketSaida)
-                            .key("dashProcessos/ano/"+ano+/"+nomeModelo+"/IDLote/"+destinatarioFinal+"/Mes/"+mes+"/"+"Semana"+numeroSemanaMes+"/Dia/"+dia+"/"+arquivoLocal.getName())
+                            .key("dashProcessos/ano/"+ano+"/"+nomeModelo+"/IDLote/"+destinatarioFinal+"/Mes/"+mes+"/"+"Semana"+numeroSemanaMes+"/Dia/"+dia+"/"+arquivoLocal.getName())
                             .build(),
                     Paths.get(saida));
             System.out.println("Arquivo processado e salvo com sucesso!");
