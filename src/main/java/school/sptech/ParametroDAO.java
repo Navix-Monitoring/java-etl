@@ -9,9 +9,18 @@ public class ParametroDAO {
     public static double cpuMin, cpuNeutro, cpuAtencao, cpuCritico;
     public static double ramMin, ramNeutro, ramAtencao, ramCritico;
     public static double discoMin, discoNeutro, discoAtencao, discoCritico;
-    public static double tempCpuMin, tempCpuNeutro, tempCpuAtencao, tempCpuCritico;
 
-    int idModelo;
+    public void carregarModeloDoBanco(Connection conn, String modelo){
+        String sql = "SELECT id from modelo where nome = '?'";
+        try(PreparedStatement ps = conn.prepareStatement(sql)){
+        ps.setString(1,modelo);
+            try(ResultSet rs = ps.executeQuery()){
+                int idModelo = rs.getInt("id");
+            }
+        }catch (SQLException e) {
+            System.out.println("Erro na busca do id do modelo: "+e.getMessage());
+        }
+    }
 
     public void carregarParametrosDoBanco(Connection conn, int fkModelo) {
         String sql = "SELECT h.tipo, ph.parametroMinimo, ph.parametroNeutro, ph.parametroAtencao, ph.parametroCritico, ph.unidadeMedida " +
@@ -28,26 +37,19 @@ public class ParametroDAO {
                     String unidade = rs.getString("unidadeMedida").toUpperCase();
 
                     switch (tipo) {
-                        case "CPU" -> {
-                            if (unidade.equals("USO")) {
-                                cpuMin = min;
-                                cpuNeutro = neutro;
-                                cpuAtencao = atencao;
-                                cpuCritico = critico;
-                            } else {
-                                tempCpuMin = min;
-                                tempCpuNeutro = neutro;
-                                tempCpuAtencao = atencao;
-                                tempCpuCritico = critico;
-                            }
+                        case "CPUPROCESSOS" -> {
+                            cpuMin = min;
+                            cpuNeutro = neutro;
+                            cpuAtencao = atencao;
+                            cpuCritico = critico;
                         }
-                        case "RAM" -> {
+                        case "RAMPROCESSOS" -> {
                             ramMin = min;
                             ramNeutro = neutro;
                             ramAtencao = atencao;
                             ramCritico = critico;
                         }
-                        case "DISCO" -> {
+                        case "DISCOPROCESSOS" -> {
                             discoMin = min;
                             discoNeutro = neutro;
                             discoAtencao = atencao;

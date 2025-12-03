@@ -4,6 +4,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +53,7 @@ public class LambdaETL {
             //For para percorrer os lotes
             for (String lote : pastasLotes){
                 List<Processo> todosProcessos = new ArrayList<>();
+                //Gerando o caminno para encontrar os processos
                 String prefixoCsvs =
                         "dashProcessos/ano/"+ano+"/"+modelo+"/IDLote/"+lote+"/Mes/"+mes+"/Semana"+semana+"/Dia/"+dia+"/";
 
@@ -86,8 +88,32 @@ public class LambdaETL {
 
                 //gerando os csv's
                 Main.gerarSumarizacao(todosProcessos,bucketClient,"listaProcessos_"+data+".csv",modelo,lote);
+                //Mandando o arquivo para o bucket
+                s3.putObject(
+                        PutObjectRequest.builder()
+                                .bucket(bucketClient)
+                                .key("dashProcessos/medianaProcessos/Modelo/"+modelo+
+                                        "/IDLote/"+lote+"/Ano/"+ano+"/Mes/"+mes+"/Semana/"
+                                        +semana+"/Dia/"+dia+"/"+"listaProcessos_"+data+".csv")
+                                .build(),
+                        Paths.get("/tmp/listaProcessos_"+data+".csv")
+                );
+                //Limpando para que não ocupe todos os 512MB de tamanho da pasta tmp
+                LambdaETL.limparTmp();
 
                 Main.gerarMediana(todosProcessos,bucketClient, "mediaProcessos_"+data+".csv",modelo,lote);
+                //Mandando o arquivo para o bucket
+                s3.putObject(
+                        PutObjectRequest.builder()
+                                .bucket(bucketClient)
+                                .key("dashProcessos/medianaProcessos/Modelo/"+modelo+
+                                        "/IDLote/"+lote+"/Ano/"+ano+"/Mes/"+mes+"/Semana/"
+                                        +semana+"/Dia/"+dia+"/"+"mediaProcessos_"+data+".csv")
+                                .build(),
+                        Paths.get("/tmp/mediaProcessos_"+data+".csv")
+                );
+                //Limpando para que não ocupe todos os 512MB de tamanho da pasta tmp
+                LambdaETL.limparTmp();
 
             }
         }

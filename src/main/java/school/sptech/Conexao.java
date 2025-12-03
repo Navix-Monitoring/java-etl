@@ -53,7 +53,6 @@ public class Conexao {
 
     }
 
-
     public void fecharConexao() {
         try {
             if (conexao != null && !conexao.isClosed()) conexao.close();
@@ -66,4 +65,3 @@ public class Conexao {
         return conexao;
     }
 }
-

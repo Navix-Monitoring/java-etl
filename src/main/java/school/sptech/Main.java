@@ -17,6 +17,10 @@ public class Main {
     static final S3Client s3 = S3Client.builder()
             .region(Region.US_EAST_1)
             .build();
+
+    private final ParametroDAO dao = new ParametroDAO();
+    private final Conexao conexao = new Conexao();
+
     //Variáveis constantes de horário
     static final ZoneId horarioSP = ZoneId.of("America/Sao_Paulo");
     static final LocalDate dataAtual = LocalDate.now(horarioSP);
@@ -43,18 +47,7 @@ public class Main {
         }
         String caminho = "/tmp/" + saidaArquivo;
 
-        //Mandando o arquivo para o bucket
-        s3.putObject(
-                PutObjectRequest.builder()
-                        .bucket(bucketSaida)
-                        .key("dashProcessos/medianaProcessos/Modelo/"+modelo+
-                                "/IDLote/"+lote+"/Ano/"+ano+"/Mes/"+mes+"/Semana/"
-                                +semana+"/Dia/"+dia+"/"+saidaArquivo)
-                        .build(),
-                Paths.get(caminho)
-        );
-        //Limpando para que não ocupe todos os 512MB de tamanho da pasta tmp
-        LambdaETL.limparTmp();
+
     }
     //Recebe os processos, os junta, escreve o csv e envia para o bucket
     public static void gerarSumarizacao(List<Processo> processos, String bucketSaida, String saidaArquivo, String modelo, String lote){
@@ -97,18 +90,6 @@ public class Main {
             e2.escrever(saidaArquivo);
         }
         String caminho = "/tmp/" + saidaArquivo;
-        //Mandando o arquivo para o bucket
-        s3.putObject(
-                PutObjectRequest.builder()
-                        .bucket(bucketSaida)
-                        .key("dashProcessos/medianaProcessos/Modelo/"+modelo+
-                                "/IDLote/"+lote+"/Ano/"+ano+"/Mes/"+mes+"/Semana/"
-                                +semana+"/Dia/"+dia+"/"+saidaArquivo)
-                        .build(),
-                Paths.get(caminho)
-        );
-        //Limpando para que não ocupe todos os 512MB de tamanho da pasta tmp
-        LambdaETL.limparTmp();
         System.out.println("Fim da sumarização!");
     }
 
