@@ -30,6 +30,8 @@ public class LambdaETL {
     final int dia = dataAtual.getDayOfMonth();
     final int semana = (dia <= 7) ? 1 : (dia <= 15) ? 2 : (dia <= 22) ? 3 : 4;
 
+    private final ParametroDAO dao = new ParametroDAO();
+    private final Conexao conexao = new Conexao();
 
     public String handlerRequest() throws IOException {
         String bucketTrusted = System.getenv("NOME_BUCKET_ENTRADA");
@@ -47,6 +49,7 @@ public class LambdaETL {
                     "dashProcessos/ano/%d/%s/",
                     ano, modelo
             );
+           int idModelo = dao.carregarModeloDoBanco(conexao.getConexao(),modelo);
             //listar pastas de lotes
             List<String> pastasLotes = listarPastas(bucketTrusted,prefixoLotes);
 
@@ -87,12 +90,12 @@ public class LambdaETL {
                 String data = ano+"-"+mes+"-"+dia+"-";
 
                 //gerando os csv's
-                Main.gerarSumarizacao(todosProcessos,bucketClient,"listaProcessos_"+data+".csv",modelo,lote);
+                Main.gerarSumarizacao(todosProcessos,"listaProcessos_"+data+".csv");
                 //Mandando o arquivo para o bucket
                 s3.putObject(
                         PutObjectRequest.builder()
                                 .bucket(bucketClient)
-                                .key("dashProcessos/medianaProcessos/Modelo/"+modelo+
+                                .key("dashProcessos/listaProcessos/Modelo/"+modelo+
                                         "/IDLote/"+lote+"/Ano/"+ano+"/Mes/"+mes+"/Semana/"
                                         +semana+"/Dia/"+dia+"/"+"listaProcessos_"+data+".csv")
                                 .build(),
@@ -101,20 +104,32 @@ public class LambdaETL {
                 //Limpando para que não ocupe todos os 512MB de tamanho da pasta tmp
                 LambdaETL.limparTmp();
 
-                Main.gerarMediana(todosProcessos,bucketClient, "mediaProcessos_"+data+".csv",modelo,lote);
+                Main.gerarConsolidado(todosProcessos, "consolidadoGeral_"+data+".csv", idModelo);
                 //Mandando o arquivo para o bucket
                 s3.putObject(
                         PutObjectRequest.builder()
                                 .bucket(bucketClient)
-                                .key("dashProcessos/medianaProcessos/Modelo/"+modelo+
+                                .key("dashProcessos/consolidadoGeral/Modelo/"+modelo+
                                         "/IDLote/"+lote+"/Ano/"+ano+"/Mes/"+mes+"/Semana/"
-                                        +semana+"/Dia/"+dia+"/"+"mediaProcessos_"+data+".csv")
+                                        +semana+"/Dia/"+dia+"/"+"consolidadoGeral_"+data+".csv")
                                 .build(),
-                        Paths.get("/tmp/mediaProcessos_"+data+".csv")
+                        Paths.get("/tmp/consolidadoGeral_"+data+".csv")
                 );
                 //Limpando para que não ocupe todos os 512MB de tamanho da pasta tmp
                 LambdaETL.limparTmp();
 
+                Main.detectarGargalos(todosProcessos, "listaGargalos_"+data+".csv", idModelo);
+                s3.putObject(
+                        PutObjectRequest.builder()
+                                .bucket(bucketClient)
+                                .key("dashProcessos/listaGargalos/Modelo/"+modelo+
+                                        "/IDLote/"+lote+"/Ano/"+ano+"/Mes/"+mes+"/Semana/"
+                                        +semana+"/Dia/"+dia+"/"+"listaGargalos_"+data+".csv")
+                                .build(),
+                        Paths.get("/tmp/listaGargalos_"+data+".csv")
+                );
+                //Limpando para que não ocupe todos os 512MB de tamanho da pasta tmp
+                LambdaETL.limparTmp();
             }
         }
         return "Processamento de arquivos finalizado!";

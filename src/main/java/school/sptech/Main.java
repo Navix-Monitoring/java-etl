@@ -17,10 +17,6 @@ public class Main {
     static final S3Client s3 = S3Client.builder()
             .region(Region.US_EAST_1)
             .build();
-
-    private final ParametroDAO dao = new ParametroDAO();
-    private final Conexao conexao = new Conexao();
-
     //Variáveis constantes de horário
     static final ZoneId horarioSP = ZoneId.of("America/Sao_Paulo");
     static final LocalDate dataAtual = LocalDate.now(horarioSP);
@@ -30,9 +26,16 @@ public class Main {
     static final int semana = (dia <= 7) ? 1 : (dia <= 14) ? 2 : (dia <= 21
     ) ? 3 : 4;
 
+    static private final ParametroDAO dao = new ParametroDAO();
+    static private final Conexao conexao = new Conexao();
+    private static final double bytesParaMB = 1024.0 * 1024.0;
+
     //Recebe os processos, escreve os no csv e manda para o bucket
-    public static void gerarMediana(List<Processo> processos,String bucketSaida, String saidaArquivo, String modelo, String lote){
+    public static void gerarConsolidado(List<Processo> processos,String saidaArquivo, int idModelo){
+        dao.carregarParametrosDoBanco(conexao.getConexao(),idModelo);
+
         for(Processo p: processos){
+
             Escrever e = new Escrever(
                     p.getTimestamp(),
                     p.getPid(),
@@ -45,14 +48,11 @@ public class Main {
             );
             e.escrever(saidaArquivo);
         }
-        String caminho = "/tmp/" + saidaArquivo;
-
 
     }
-    //Recebe os processos, os junta, escreve o csv e envia para o bucket
-    public static void gerarSumarizacao(List<Processo> processos, String bucketSaida, String saidaArquivo, String modelo, String lote){
 
-        System.out.println("Inicio da sumarização dos processos...");
+    //Recebe os processos, os junta, escreve o csv e envia para o bucket
+    public static void gerarSumarizacao(List<Processo> processos, String saidaArquivo){
         Map<String, List<Processo>> agrupar = new HashMap<>();
 
         for(Processo p : processos){
@@ -68,9 +68,28 @@ public class Main {
                     .toList();
 
             Double mediaCpu = lista.stream().mapToDouble(Processo::getCpu).average().orElse(0);
+
+            String cpuStatus = mediaCpu <= dao.cpuMin? "BAIXO": mediaCpu<= dao.cpuNeutro ? "NEUTRO" :
+                    mediaCpu<= dao.cpuAtencao ? "ATENÇÃO" : "CRÍTICO";
+
+
+
             Double mediaRam = lista.stream().mapToDouble(Processo::getRam).average().orElse(0);
+            String statusRAM = mediaRam <= dao.ramMin ? "BAIXO" :
+                    mediaRam <= dao.ramNeutro ? "NEUTRO" :
+                            mediaRam <= dao.ramAtencao ? "ATENÇÃO" : "CRÍTICO";
+
+
             Double mediaBytesLidos = lista.stream().mapToDouble(Processo::getBytesLidos).average().orElse(0);
             Double mediaBytesEscritos = lista.stream().mapToDouble(Processo::getBytesEscritos).average().orElse(0);
+
+            Double bytesTotais = mediaBytesLidos + mediaBytesEscritos;
+            Double disco = bytesTotais/ bytesParaMB;
+
+            String statusDISCO = disco <= dao.discoMin ? "BAIXO" :
+                    disco <= dao.discoNeutro ? "NEUTRO" :
+                            disco <= dao.discoAtencao ? "ATENÇÃO" : "CRÍTICO";
+
             Double desvioPadraoRam = calcularDesvioPadrao(valoresRam);
             Double mediaTempoVida = lista.stream().mapToDouble(Processo::getTempoVida).average().orElse(0);
 
@@ -86,12 +105,41 @@ public class Main {
                     desvioPadraoRam,
                     mediaBytesLidos,
                     mediaBytesEscritos,
-                    mediaTempoVida);
+                    mediaTempoVida,
+                    cpuStatus,
+                    statusRAM,
+                    statusDISCO);
             e2.escrever(saidaArquivo);
         }
-        String caminho = "/tmp/" + saidaArquivo;
-        System.out.println("Fim da sumarização!");
     }
+
+    public static void detectarGargalos(List<Processo> processos, String saidaArquivo, int idModelo) {
+        dao.carregarParametrosDoBanco(conexao.getConexao(),idModelo);
+
+        for (Processo p : processos) {
+            // Gargalo de CPU
+            if (p.getCpu() != null && p.getCpu() > dao.cpuCritico) {
+                Escrever cpu = new Escrever(p.getTimestamp(),p.getPid(),p.getNome(),"CPU",dao.cpuCritico,p.getCpu());
+                cpu.escrever(saidaArquivo);
+            }
+
+            // Gargalo de RAM
+            if (p.getRam() != null && p.getRam() > dao.ramCritico) {
+                Escrever ram = new Escrever(p.getTimestamp(),p.getPid(),p.getNome(),"RAM",dao.ramCritico,p.getRam());
+                ram.escrever(saidaArquivo);
+            }
+
+            // Gargalo de Disco
+            Double bytesTotais = p.getBytesLidos() + p.getBytesEscritos();
+            Double megabytesTotais = bytesTotais/ bytesParaMB;
+
+            if (p.getBytesLidos() != null && megabytesTotais > dao.discoCritico) {
+                Escrever disco = new Escrever(p.getTimestamp(),p.getPid(),p.getNome(),"DISCO",dao.discoCritico,megabytesTotais);
+                disco.escrever(saidaArquivo);
+            }
+        }
+    }
+
 
     //Recebe o csv e adiciona a classe processo
     public static List<Processo> verificarArquivos(String bucket, String key) throws IOException {

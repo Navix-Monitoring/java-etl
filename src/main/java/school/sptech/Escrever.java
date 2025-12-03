@@ -13,7 +13,8 @@ import java.util.Locale;
 
 public class Escrever {
     private String nome, timestamp;
-    private Double cpu,ram,disco;
+    private String StatusCPU, StatusRAM, StatusDISCO, gargalo;
+    private Double cpu,ram,disco, valor, limite;
     private Integer pid;
     private Double bytesLidos,bytesEscritos,tempoVida,desvioPadraoRam;
 
@@ -26,12 +27,15 @@ public class Escrever {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
         df = new DecimalFormat("#.##", symbols);
     }
-    public Escrever(String nome, Double cpu, Double ram,Double desvioPadraoRam, Double bytesLidos, Double bytesEscritos, Double tempoVida) {
+    public Escrever(String nome, Double cpu, Double ram,Double desvioPadraoRam, Double bytesLidos, Double bytesEscritos, Double tempoVida, String StatusCPU, String StatusRAM,String StatusDISCO) {
         this.nome = nome;
         this.cpu = cpu;
         this.ram = ram;
         this.desvioPadraoRam = desvioPadraoRam;
         this.tempoVida = tempoVida;
+        this.StatusCPU = StatusCPU;
+        this.StatusRAM = StatusRAM;
+        this.StatusDISCO = StatusDISCO;
         if(bytesLidos!= null && bytesEscritos != null){
             Double bytesTotais = bytesLidos + bytesEscritos;
             Double megabytesTotais = bytesTotais/ bytesParaMB;
@@ -51,6 +55,15 @@ public class Escrever {
             Double megabytesTotais = bytesTotais/ bytesParaMB;
             this.disco = megabytesTotais;
         }
+    }
+
+    public Escrever(String timestamp, Integer pid, String nome, String gargalo, Double limite, Double valor) {
+        this.nome = nome;
+        this.timestamp = timestamp;
+        this.gargalo = gargalo;
+        this.limite = limite;
+        this.valor = valor;
+        this.pid = pid;
     }
 
     private String formatarTempoDeVida() {
@@ -88,6 +101,9 @@ public class Escrever {
         if (bytesLidos != null) colunas.add("BytesLidos");
         if (bytesEscritos != null) colunas.add("BytesEscritos");
         if (tempoVida != null) colunas.add("TempoVida");
+        if (StatusCPU != null) colunas.add("StatusCPU");
+        if (StatusRAM != null) colunas.add("StatusRAM");
+        if (StatusDISCO != null) colunas.add("StatusDISCO");
         colunas.add("TempoVidaFormatado");
         return colunas;
     }
@@ -104,6 +120,10 @@ public class Escrever {
         if (bytesLidos != null) valoresParaEscrever.add(String.valueOf(bytesLidos));
         if (bytesEscritos != null) valoresParaEscrever.add(String.valueOf(bytesEscritos));
         if (tempoVida != null) valoresParaEscrever.add(String.valueOf(tempoVida));
+        if (StatusCPU != null) valoresParaEscrever.add(String.valueOf(StatusCPU));
+        if (StatusRAM != null) valoresParaEscrever.add(String.valueOf(StatusRAM));
+        if (StatusDISCO != null) valoresParaEscrever.add(String.valueOf(StatusDISCO));
+
         valoresParaEscrever.add(formatarTempoDeVida());
         return valoresParaEscrever;
     }

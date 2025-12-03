@@ -5,21 +5,23 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ParametroDAO {
+public class    ParametroDAO {
     public static double cpuMin, cpuNeutro, cpuAtencao, cpuCritico;
     public static double ramMin, ramNeutro, ramAtencao, ramCritico;
     public static double discoMin, discoNeutro, discoAtencao, discoCritico;
 
-    public void carregarModeloDoBanco(Connection conn, String modelo){
+    public int carregarModeloDoBanco(Connection conn, String modelo) {
         String sql = "SELECT id from modelo where nome = '?'";
-        try(PreparedStatement ps = conn.prepareStatement(sql)){
-        ps.setString(1,modelo);
-            try(ResultSet rs = ps.executeQuery()){
-                int idModelo = rs.getInt("id");
+        int idModelo = 0;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, modelo);
+            try (ResultSet rs = ps.executeQuery()) {
+                idModelo = rs.getInt("id");
             }
-        }catch (SQLException e) {
-            System.out.println("Erro na busca do id do modelo: "+e.getMessage());
+        } catch (SQLException e) {
+            System.out.println("Erro na busca do id do modelo: " + e.getMessage());
         }
+        return idModelo;
     }
 
     public void carregarParametrosDoBanco(Connection conn, int fkModelo) {
