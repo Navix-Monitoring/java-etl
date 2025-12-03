@@ -1,141 +1,136 @@
 package school.sptech;
 
-import java.io.File;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.WeekFields;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Date;
+import java.util.stream.Stream;
 
 public class LambdaETL {
 
-    private final S3Client s3 = S3Client.builder()
+    final S3Client s3 = S3Client.builder()
             .region(Region.US_EAST_1)
             .build();
-    public void processarArquivo(String bucket, String key, String bucketSaida) {
 
-        String destinatarioFinal = "OUTROS";
-        String pastaMes = String.format("%02d", LocalDate.now().getMonthValue());
-        int numeroSemanaMes = 0;
+    final ZoneId horarioSP = ZoneId.of("America/Sao_Paulo");
+    final LocalDate dataAtual = LocalDate.now(horarioSP);
+    final int ano = dataAtual.getYear();
+    final int mes = dataAtual.getMonthValue();
+    final int dia = dataAtual.getDayOfMonth();
+    final int semana = (dia <= 7) ? 1 : (dia <= 15) ? 2 : (dia <= 22) ? 3 : 4;
 
-        ZoneId horarioSP = ZoneId.of("America/Sao_Paulo");
 
-        int dia = LocalDate.now(horarioSP).getDayOfMonth();
+    public String handlerRequest() throws IOException {
+        String bucketTrusted = System.getenv("NOME_BUCKET_ENTRADA");
+        String bucketClient = System.getenv("NOME_BUCKET_SAIDA");
+        String prefixoModelos = "dashProcessos/ano" + ano + "/";
 
-        if (dia <= 7) {
-            numeroSemanaMes = 1;
+        System.out.println("Iniciando o tratamento de dados");
+
+        //listar pastas de modelo
+        List<String> pastasModelo = listarPastas(bucketTrusted, prefixoModelos);
+
+        for(String modelo: pastasModelo){
+            //Criando um prefixo dinâmico baseado no modelo
+            String prefixoLotes = String.format(
+                    "dashProcessos/ano/%d/%s/",
+                    ano, modelo
+            );
+            //listar pastas de lotes
+            List<String> pastasLotes = listarPastas(bucketTrusted,prefixoLotes);
+
+            //For para percorrer os lotes
+            for (String lote : pastasLotes){
+                List<Processo> todosProcessos = new ArrayList<>();
+                String prefixoCsvs =
+                        "dashProcessos/ano/"+ano+"/"+modelo+"/IDLote/"+lote+"/Mes/"+mes+"/Semana"+semana+"/Dia/"+dia+"/";
+
+                ListObjectsV2Request requisicao = ListObjectsV2Request.builder()
+                        .bucket(bucketTrusted)
+                        .prefix(prefixoCsvs)
+                        .build();
+                var resposta = s3.listObjectsV2(requisicao);
+
+                //for para ler e salvar cada conteudo de dentro da pasta
+                for (var obj : resposta.contents()) {
+
+                    System.out.println("Arquivo encontrado: " + obj.key());
+
+                    //baixando o csv na memória
+                    var s3Object = s3.getObject(
+                            GetObjectRequest.builder()
+                                    .bucket(bucketTrusted)
+                                    .key(obj.key())
+                                    .build()
+                    );
+
+                    List<Processo> processosDoArquivo =
+                            Main.verificarArquivos(bucketTrusted, obj.key());
+
+                    todosProcessos.addAll(processosDoArquivo);
+
+                }
+
+                //Salvando a data atual em uma variavel
+                String data = ano+"-"+mes+"-"+dia+"-";
+
+                //gerando os csv's
+                Main.gerarSumarizacao(todosProcessos,bucketClient,"listaProcessos_"+data+".csv",modelo,lote);
+
+                Main.gerarMediana(todosProcessos,bucketClient, "mediaProcessos_"+data+".csv",modelo,lote);
+
+            }
         }
-        else if (dia <= 14) {
-            numeroSemanaMes = 2;
-        }
-        else if (dia <= 21) {
-            numeroSemanaMes = 3;
-        }
-        else {
-            numeroSemanaMes = 4;
-        }
+        return "Processamento de arquivos finalizado!";
+    }
 
-        try {
-            File arquivoLocal = new File("/tmp/" + new File(key).getName());
+    public List<String> listarPastas(String bucket, String prefixo){
 
-            if (arquivoLocal.exists()) {
-                arquivoLocal.delete();
+        ListObjectsV2Request requisicao = ListObjectsV2Request.builder()
+                .bucket(bucket)
+                .prefix(prefixo)
+                .delimiter("/")
+                .build();
+
+        var resposta = s3.listObjectsV2(requisicao);
+
+        return resposta.commonPrefixes().stream()
+                .map(cp -> cp.prefix()
+                        .replace(prefixo, "")
+                        .replace("/", ""))
+                .toList();
+
+    }
+
+    public static void limparTmp() {
+        File tmp = new File("/tmp/");
+
+        if (tmp.exists() && tmp.isDirectory()) {
+            for (File file : tmp.listFiles()) {
+                deletarRecursivamente(file);
             }
-
-            s3.getObject(GetObjectRequest.builder()
-                            .bucket(bucket)
-                            .key(key)
-                            .build(),
-                    Paths.get(arquivoLocal.getAbsolutePath()));
-
-            if (key.toLowerCase().contains("processos")) {
-                System.out.println("Ignorando completamente: arquivo contém 'processos':" + key);
-                return;
-            }
-
-            if (key.startsWith("1")) {
-                destinatarioFinal = "1";
-            }
-            else if (key.startsWith("2")) {
-                destinatarioFinal = "2";
-            }
-            else if (key.startsWith("3")) {
-                destinatarioFinal = "3";
-            }
-            else if (key.startsWith("4")) {
-                destinatarioFinal = "4";
-            }
-            else if (key.startsWith("5")) {
-                destinatarioFinal = "5";
-            }
-            else if (key.startsWith("6")) {
-                destinatarioFinal = "6";
-            }
-
-            Conexao conexao = new Conexao();
-            ModeloDAO modeloDAO = new ModeloDAO();
-
-            ModeloInfo info = modeloDAO.buscarPorLote(conexao.getConexao(), Integer.parseInt(destinatarioFinal));
-            conexao.fecharConexao();
-
-            if (info == null) {
-                throw new RuntimeException("Nenhum modelo encontrado para o lote " + destinatarioFinal);
-            }
-
-
-            String nomeModelo = info.getNomeModelo();
-            String nomeEmpresa = info.getEmpresaNome();
-            int fkModelo = info.getFkModelo();
-
-
-            String saida = "/tmp/tratado_" + System.currentTimeMillis() + ".csv";
-            MainETL.LeituraCSV leitura = new MainETL.LeituraCSV(fkModelo);
-            leitura.processar(arquivoLocal.getAbsolutePath(), saida);
-
-            s3.putObject(PutObjectRequest.builder()
-                            .bucket(bucketSaida)
-                            .key("2025/"+nomeEmpresa+"/"+nomeModelo+"/IDVeiculo/"+destinatarioFinal+"/Mes/"+pastaMes+"/Semana"+numeroSemanaMes+"/"+arquivoLocal.getName())
-                            .build(),
-                    Paths.get(saida));
-
-            System.out.println("Arquivo processado e salvo com sucesso!");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Erro no processamento: " + e.getMessage());
         }
     }
-    public String handleRequest(Map<String, Object> event) {
-        try {
-            String bucket = null;
-            String key = null;
-            String bucketSaida = System.getenv("NOME_BUCKET_SAIDA");
 
-            if (event != null && event.containsKey("Records")) {
-                var records = (List<Map<String, Object>>) event.get("Records");
-                if (!records.isEmpty()) {
-                    var s3 = (Map<String, Object>) records.get(0).get("s3");
-                    bucket = ((Map<String, Object>) s3.get("bucket")).get("name").toString();
-                    key = ((Map<String, Object>) s3.get("object")).get("key").toString();
-                }
+    private static void deletarRecursivamente(File file) {
+        if (file.isDirectory()) {
+            for (File sub : file.listFiles()) {
+                deletarRecursivamente(sub);
             }
-
-            System.out.println("Bucket: " + bucket);
-            System.out.println("Arquivo: " + key);
-
-            processarArquivo(bucket, key, bucketSaida);
-            return "Processamento finalizado com sucesso!";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Erro no handleRequest: " + e.getMessage();
         }
+        file.delete();
     }
 
 }
+
+
