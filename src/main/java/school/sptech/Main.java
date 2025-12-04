@@ -1,20 +1,14 @@
 package school.sptech;
 
-
-// responsavel por varrer os 6 lotes no bucket Trusted
-// processar os arquivos CSV do dia atual, tratar
-// e salvar/atualizar o JSON no bucket de destino.
-
-
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.regions.Region;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -39,57 +33,78 @@ public class Main implements RequestHandler<S3Event, String> {
         String bucketDestino = "bucket-client-navix";
         String caminhoCompleto = "dashMediana/2025/RelatorioGeral.json";
 
+        // Busca o JSON atual (para fazer o append/update dos dados)
         String jsonGeral = buscarJsonGeral(bucketDestino, caminhoCompleto);
 
-        int ano = 2025;
-        int diaAtual = LocalDate.now().getDayOfMonth();
-        int mesAtual = LocalDate.now().getMonthValue();
+        System.out.println("Iniciando processamento semanal dos 6 lotes...");
 
-        int numeroSemana = diaAtual <= 7 ? 1 :
-                diaAtual <= 14 ? 2 :
-                        diaAtual <= 21 ? 3 : 4;
+        // Data final é hoje
+        LocalDate dataHoje = LocalDate.now();
 
-        System.out.println("Iniciando processamento dos 6 lotes...");
-
+        // Loop pelos Lotes (Veículos/Máquinas)
         for (int i = 1; i <= 6; i++) {
-            try {
-                String chaveArquivo = ano + "/SPTechMotors/NAV-M100/IDVeiculo/" + i + "/Mes/" + mesAtual + "/Semana" + numeroSemana + "/" +
-                        i + "-" + diaAtual + "-" + mesAtual + "-" + ano + ".csv";
+            System.out.println("Processando Lote " + i);
 
-                InputStream s3InputStream;
+            // Loop para pegar os últimos 7 dias (hoje + 6 dias para trás)
+            // j = 0 é hoje, j = 1 é ontem, etc.
+            for (int j = 0; j < 7; j++) {
+
+                // Calcula a data específica da iteração
+                LocalDate dataAlvo = dataHoje.minusDays(j);
+
+                int ano = dataAlvo.getYear();
+                int mes = dataAlvo.getMonthValue();
+                int dia = dataAlvo.getDayOfMonth();
+
+                // Calcula a semana baseada no dia do mês da DATA ALVO
+                int numeroSemana = dia <= 7 ? 1 :
+                        dia <= 14 ? 2 :
+                                dia <= 21 ? 3 : 4;
+
                 try {
-                    s3InputStream = s3Client.getObject(GetObjectRequest.builder()
-                            .bucket(bucketOrigem)
-                            .key(chaveArquivo)
-                            .build());
-                } catch (NoSuchKeyException e) {
-                    continue;
+                    // Monta o caminho dinâmico baseado na data do loop
+                    String chaveArquivo = ano + "/SPTechMotors/NAV-M100/IDVeiculo/" + i + "/Mes/" + mes + "/Semana" + numeroSemana + "/" +
+                            i + "-" + dia + "-" + mes + "-" + ano + ".csv";
+
+                    InputStream s3InputStream;
+                    try {
+                        s3InputStream = s3Client.getObject(GetObjectRequest.builder()
+                                .bucket(bucketOrigem)
+                                .key(chaveArquivo)
+                                .build());
+                    } catch (NoSuchKeyException e) {
+                        // Se o arquivo desse dia específico não existir, apenas pula para o próximo dia
+                        continue;
+                    }
+
+                    GerenciadorCsv.DadosLote dados = processadorCsv.processarStream(s3InputStream);
+
+                    if (dados.estaVazio()) continue;
+
+                    double medCpu = calculadora.calcularMediana(dados.listaCpu);
+                    double medRam = calculadora.calcularMediana(dados.listaRam);
+                    double medDisco = calculadora.calcularMediana(dados.listaDisco);
+                    double medProc = calculadora.calcularMediana(dados.listaProcessos);
+                    double medTemp = calculadora.calcularMediana(dados.listaTemperatura);
+
+                    // Cria o JSON apenas deste dia
+                    String jsonDia = gerenciadorJson.criarJsonDoDia(
+                            dados.diaSemanaPortugues, medCpu, medRam, medDisco, medProc, medTemp
+                    );
+
+                    // Adiciona/Atualiza este dia no JSON Geral
+                    jsonGeral = gerenciadorJson.adicionarLoteAoGeral(jsonGeral, i, jsonDia);
+
+                    log.append("Lote ").append(i).append(" (Data: ").append(dataAlvo).append(") OK; ");
+
+                } catch (Exception e) {
+                    System.out.println("Erro ao processar Lote " + i + " na data " + dataAlvo + ": " + e.getMessage());
                 }
-
-                GerenciadorCsv.DadosLote dados = processadorCsv.processarStream(s3InputStream);
-
-                if (dados.estaVazio()) continue;
-
-                double medCpu = calculadora.calcularMediana(dados.listaCpu);
-                double medRam = calculadora.calcularMediana(dados.listaRam);
-                double medDisco = calculadora.calcularMediana(dados.listaDisco);
-                double medProc = calculadora.calcularMediana(dados.listaProcessos);
-                double medTemp = calculadora.calcularMediana(dados.listaTemperatura);
-
-                String jsonDia = gerenciadorJson.criarJsonDoDia(
-                        dados.diaSemanaPortugues, medCpu, medRam, medDisco, medProc, medTemp
-                );
-
-                jsonGeral = gerenciadorJson.adicionarLoteAoGeral(jsonGeral, i, jsonDia);
-
-                log.append("Lote ").append(i).append(" processado; ");
-
-            } catch (Exception e) {
-                System.out.println("Erro ao processar Lote " + i + ": " + e.getMessage());
             }
         }
 
         try {
+            // Salva o JSON consolidado da semana inteira
             s3Client.putObject(PutObjectRequest.builder()
                             .bucket(bucketDestino)
                             .key(caminhoCompleto)
@@ -97,7 +112,7 @@ public class Main implements RequestHandler<S3Event, String> {
                             .build(),
                     RequestBody.fromString(jsonGeral, StandardCharsets.UTF_8));
 
-            return "Sucesso! Lotes atualizados: " + log.toString();
+            return "Sucesso! Processamento semanal concluído. Logs: " + log.toString();
         } catch (Exception e) {
             return "Erro ao salvar JSON final: " + e.getMessage();
         }
