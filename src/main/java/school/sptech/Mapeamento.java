@@ -4,38 +4,99 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Mapeamento {
-    public static Map<String, String> criarMapeamento(){
+
+    public static Map<String, String> criarMapeamento() {
         Map<String, String> map = new HashMap<>();
-        map.put("mysqld", "SensorFusion_DB_Manager");
-        map.put("Xorg", "Vehicle_HMI_Display_Driver");
-        map.put("gnome-shell", "Autonomous_Navigation_System");
-        map.put("chrome", "Browser_Module");
 
-        map.put("dbus-daemon", "InterProcess_Comms_Bus");
-        map.put("at-spi2-registryd", "Accessibility_Feature_Service");
-        map.put("xdg-desktop-portal", "System_Integration_Layer");
-        map.put("xdg-desktop-portal-gtk", "System_Integration_Layer_GTK");
-        map.put("containerd", "Containerized_Environments_Mgr"); // Se usar containers
-        map.put("avahi-daemon", "Network_Discovery_Service");
-        map.put("thermald", "Thermal_Management_Unit_Driver");
+        // ================================
+        // INTERFACE, TELA E PAINEL DO CARRO
+        // ================================
+        map.put("Xorg", "Painel de Informações do Carro");
+        map.put("wayland", "Sistema de Exibição do Painel");
+        map.put("gnome-shell", "Interface de Condução Autônoma");
+        map.put("kwin", "Controle Visual do Painel");
+        map.put("plasmashell", "Painel Central do Veículo");
+        map.put("gdm", "Tela de Acesso do Motorista");
+        map.put("lightdm", "Entrada do Motorista");
+        map.put("sddm", "Controle de Abertura do Veículo");
 
-        map.put("code", "Artificial_Inteligence_Constructing");
-        map.put("idea", "Artificial_Inteligence_Translating");
-        map.put("python", "Artificial_Inteligence_Mapping");
-        map.put("java", "Main_Control_Software");
+        // ================================
+        // SISTEMA OPERACIONAL DO CARRO
+        // ================================
+        map.put("systemd", "Núcleo do Veículo");
+        map.put("systemd-logind", "Controle de Presença do Motorista");
+        map.put("systemd-journald", "Registro de Eventos do Carro");
+        map.put("systemd-udevd", "Ativador de Sensores do Veículo");
+        map.put("NetworkManager", "Gerenciador de Conexões do Carro");
+        map.put("polkitd", "Verificador de Permissões");
+        map.put("cron", "Agendador de Rotinas");
+        map.put("atd", "Programador de Tarefas");
+        map.put("modprobe", "Carregador de Funções Internas");
 
-        map.put("rcu_sched", "Kernel_Scheduler_RCU");
-        map.put("migration/1", "Kernel_Core_Migration_Handler");
-        map.put("kworker/1:0-events", "Kernel_Event_Worker_Core1");
-        map.put("kswapd0", "Memory_Management_Unit");
-        map.put("irq/135-VEN_04F", "HW_Interrupt_Driver_A");
-        map.put("kworker/u16:8-events_unbound", "Kernel_Event_Worker_Unbound");
-        map.put("irq/140-rtw88_p", "HW_Interrupt_Driver_Wifi_Sensor");
-        map.put("kworker/3:4-events", "Kernel_Event_Worker_Core3");
-        map.put("kworker/u16:1-i915", "GPU_Display_Driver_Kernel_I915");
-        map.put("kworker/u17:1-i915_flip", "GPU_Buffer_Flip_Handler");
-        map.put("kworker/0:2-mm_percpu_wq", "Kernel_Memory_Worker");
+        // ================================
+        // PROCESSOS INTERNOS / MOTOR DIGITAL
+        // ================================
+        map.put("ksoftirqd", "Resposta Rápida de Sensores");
+        map.put("kworker", "Operador Interno do Sistema");
+        map.put("rcu_preempt", "Sincronização Interna");
+        map.put("ksmd", "Otimizador de Memória");
+        map.put("khungtaskd", "Monitor de Travamentos");
+        map.put("watchdog", "Guardião de Segurança");
+
+        // ================================
+        // REDE, INTERNET E COMUNICAÇÃO
+        // ================================
+        map.put("wpa_supplicant", "Conexão Wi-Fi do Carro");
+        map.put("nm-applet", "Indicador de Rede");
+        map.put("bluetoothd", "Comunicação de Curta Distância");
+        map.put("dhclient", "Solicitação de Endereço de Rede");
+        map.put("dnsmasq", "Cache de Navegação");
+        map.put("ssh", "Acesso Remoto de Diagnóstico");
+        map.put("cups-browsed", "Localizador de Dispositivos");
+
+        // ================================
+        // HARDWARE / SENSORES E COMPONENTES
+        // ================================
+        map.put("pulseaudio", "Controle de Áudio Interno");
+        map.put("pipewire", "Central Multimídia");
+        map.put("upowerd", "Gerenciador de Energia");
+        map.put("udisksd", "Controle de Armazenamento");
+        map.put("fwupd", "Atualização de Componentes");
+        map.put("boltd", "Porta de Alta Velocidade");
+        map.put("i915", "Motor Gráfico do Painel");
+        map.put("rtw88", "Sensor de Conexão Sem Fio");
+
+        // ================================
+        // SEGURANÇA E PROTEÇÃO DO SISTEMA
+        // ================================
+        map.put("apparmor", "Sistema de Proteção do Veículo");
+        map.put("selinuxd", "Monitor de Integridade");
+        map.put("gnome-keyring-daemon", "Cofre de Senhas");
+        map.put("clamd", "Varredor de Ameaças");
+
+        // ================================
+        // APLICATIVOS HUMANIZADOS
+        // ================================
+        map.put("firefox", "Navegador");
+        map.put("chrome", "Navegador de Internet");
+        map.put("spotify", "Música do Carro");
+        map.put("discord", "Comunicação por Voz");
+        map.put("steam", "Área de Entretenimento");
+        map.put("code", "Ferramenta do Programador");
+        map.put("python3", "Scripts de Análise");
+        map.put("java", "Central de Controle");
+        map.put("teams", "Comunicação Corporativa");
+        map.put("slack", "Mensagens de Trabalho");
+
+        // ================================
+        // BANCOS DE DADOS E ARMAZENAMENTO
+        // ================================
+        map.put("mysqld", "Banco de Dados de Navegação");
+        map.put("postgres", "Armazenamento de Rotas");
+        map.put("mongod", "Registro de Telemetria");
+        map.put("redis-server", "Cache de Dados Rápidos");
 
         return map;
     }
 }
+
