@@ -94,6 +94,9 @@ public class Escrever {
         if (timestamp != null) colunas.add("Timestamp");
         if (pid != null) colunas.add("Pid");
         if (nome != null) colunas.add("Nome");
+        if (gargalo != null) colunas.add("Gargalo");
+        if (valor != null) colunas.add("Valor");
+        if (limite != null) colunas.add("Limite");
         if (cpu != null) colunas.add("Cpu");
         if (ram != null) colunas.add("Ram");
         if (desvioPadraoRam != null) colunas.add("DesvioPadraoRam");
@@ -113,6 +116,9 @@ public class Escrever {
         if (timestamp != null) valoresParaEscrever.add(timestamp);
         if (pid != null) valoresParaEscrever.add(String.valueOf(pid));
         if (nome != null) valoresParaEscrever.add(nome);
+        if (gargalo != null) valoresParaEscrever.add(gargalo);
+        if (valor != null) valoresParaEscrever.add(valor);
+        if (limite != null) valoresParaEscrever.add(limite);
         if (cpu != null) valoresParaEscrever.add(String.valueOf(cpu));
         if (ram != null) valoresParaEscrever.add(String.valueOf(ram));
         if (desvioPadraoRam != null) valoresParaEscrever.add(String.valueOf(desvioPadraoRam));
